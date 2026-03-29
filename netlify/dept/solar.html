@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="ko" data-dept="solar">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>태양광사업 | NURION</title>
+  <meta name="description" content="누리온홀딩스 태양광사업 부문. 지붕형, 영농형, 주차장형, 주민참여형, RE100, 탄소중립 재생에너지, 태양광협동조합 설립 대행까지 통합 지원합니다." />
+  <meta property="og:title" content="태양광사업 | NURION" />
+  <meta property="og:description" content="태양광 개발, 시공, 인허가, 주민참여형, 협동조합 설립 대행까지 아우르는 누리온홀딩스 태양광사업 부문" />
+  <meta property="og:type" content="website" />
+  <style>
+  :root{
+    --bg0:#070b12;
+    --surface: rgba(255,255,255,.04);
+    --surface2: rgba(255,255,255,.06);
+    --border: rgba(255,255,255,.14);
+    --text: #e8eeff;
+    --muted: rgba(232,238,255,.72);
+    --shadow: 0 18px 50px rgba(0,0,0,.38);
+    --radius: 18px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family: "Pretendard","Noto Sans KR", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--text);
+    background: var(--bg0);
+  }
+  a{color:inherit; text-decoration:none}
+  img{max-width:100%; display:block}
+  .wrap{width:min(1120px, calc(100vw - 32px)); margin: 18px auto 72px;}
+  .topbar{
+    position: sticky; top: 12px; z-index: 10;
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: rgba(10,14,23,0.72);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow);
+  }
+  .brand{display:flex; flex-direction:column; gap:4px}
+  .kicker{font-size:12px; letter-spacing:.12em; opacity:.75}
+  .title{font-size:16px; font-weight:800}
+  .actions{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+  .btn{
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.06);
+    color:#fff;
+    border-radius: 12px;
+    padding: 10px 12px;
+    cursor:pointer;
+    transition:.2s ease;
+  }
+  .btn:hover{
+    transform:translateY(-1px);
+    background:rgba(255,255,255,0.09);
+  }
+  .btn.primary{
+    background: color-mix(in srgb, var(--accent) 32%, rgba(255,255,255,.02));
+    border-color: color-mix(in srgb, var(--accent) 65%, rgba(255,255,255,.12));
+  }
+  .grid{
+    margin-top: 14px;
+    display:grid;
+    grid-template-columns: 1.2fr .8fr;
+    gap: 12px;
+  }
+  .hero{
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    background: linear-gradient(160deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+    box-shadow: var(--shadow);
+    overflow:hidden;
+    position:relative;
+  }
+  .hero:before{
+    content:"";
+    position:absolute; inset:0;
+    background: var(--deptGlow);
+    pointer-events:none;
+  }
+  .hero h1{margin: 10px 0 10px; font-size: 32px; line-height:1.22; position:relative}
+  .hero p{margin:0; opacity:.88; line-height:1.7; position:relative}
+  .heroRow{
+    margin-top: 14px;
+    display:grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    position:relative;
+  }
+  .heroMedia{
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 16px;
+    overflow:hidden;
+    background: rgba(0,0,0,.25);
+    aspect-ratio: 16 / 10;
+    position:relative;
+  }
+  .heroMedia .tag{
+    position:absolute; left:12px; top:12px;
+    display:inline-flex; align-items:center; gap:8px;
+    border: 1px solid rgba(255,255,255,.14);
+    background: rgba(0,0,0,.28);
+    border-radius: 999px;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+  .dot{
+    width:10px; height:10px; border-radius:50%;
+    background: var(--accent);
+    box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 70%, transparent);
+  }
+  .quick{
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    background: rgba(255,255,255,.03);
+    box-shadow: var(--shadow);
+  }
+  .quick h2{margin:0 0 10px; font-size:14px; opacity:.9}
+  .quickGrid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .qItem{
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 14px;
+    padding: 12px;
+    background: rgba(255,255,255,.04);
+    min-height: 92px;
+  }
+  .qTop{display:flex; align-items:center; gap:10px; margin-bottom:6px}
+  .qIcon{font-size:18px}
+  .qTitle{font-weight:800; font-size:13px}
+  .qDesc{font-size:12px; opacity:.8; line-height:1.45}
+  .section{
+    margin-top: 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    background: rgba(255,255,255,.03);
+    box-shadow: var(--shadow);
+  }
+  .section h2{margin:0 0 10px; font-size:18px}
+  .sectionLead{
+    margin:0 0 16px;
+    color:var(--muted);
+    line-height:1.65;
+    font-size:14px;
+  }
+  .cards{
+    display:grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .card{
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 16px;
+    padding: 14px;
+    background: rgba(255,255,255,.04);
+  }
+  .cardHead{display:flex; align-items:flex-start; gap:10px; margin-bottom:8px}
+  .badge{
+    flex:0 0 auto;
+    width:36px; height:36px; border-radius: 12px;
+    display:flex; align-items:center; justify-content:center;
+    background: color-mix(in srgb, var(--accent) 18%, rgba(255,255,255,.02));
+    border: 1px solid color-mix(in srgb, var(--accent) 55%, rgba(255,255,255,.12));
+  }
+  .card h3{margin:0; font-size:15px}
+  .card p{margin: 6px 0 10px; opacity:.84; line-height:1.6; font-size:13px}
+  .card ul{margin:0 0 0 16px; padding:0; line-height:1.6; opacity:.92}
+  .split{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .steps{
+    display:grid;
+    gap: 10px;
+  }
+  .step{
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 16px;
+    padding: 14px;
+    background: rgba(255,255,255,.04);
+  }
+  .stepTitle{font-weight:900}
+  .stepDesc{opacity:.84; margin-top:6px; line-height:1.6; font-size:13px}
+  .faq details{
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 16px;
+    padding: 12px 14px;
+    background: rgba(255,255,255,.04);
+  }
+  .faq details + details{margin-top:10px}
+  .faq summary{cursor:pointer; font-weight:800}
+  .faq p{margin:10px 0 0; opacity:.84; line-height:1.6; font-size:13px}
+  .ctaBar{
+    margin-top: 14px;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+  .note{
+    display:flex; align-items:flex-start; gap:10px;
+    border: 1px dashed rgba(255,255,255,.22);
+    border-radius: 16px;
+    padding: 12px 14px;
+    background: rgba(0,0,0,.18);
+    opacity:.92;
+  }
+  .footer{
+    margin-top: 14px;
+    display:flex;
+    justify-content:space-between;
+    gap: 10px;
+    opacity: .88;
+    flex-wrap: wrap;
+    align-items:center;
+  }
+  .pill{
+    display:inline-flex; align-items:center; gap:8px;
+    border: 1px solid rgba(255,255,255,.12);
+    background: rgba(0,0,0,.18);
+    border-radius: 999px;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+  .small{font-size:12px; opacity:.78}
+  .infoList{
+    display:grid;
+    gap:10px;
+    margin-top:12px;
+  }
+  .infoItem{
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 14px;
+    padding: 12px;
+    background: rgba(255,255,255,.04);
+  }
+  .infoItem strong{
+    display:block;
+    margin-bottom:6px;
+    font-size:13px;
+  }
+  .docTable{
+    width:100%;
+    border-collapse:collapse;
+    overflow:hidden;
+    border-radius:16px;
+    border:1px solid rgba(255,255,255,.12);
+  }
+  .docTable th,
+  .docTable td{
+    padding:14px 12px;
+    text-align:left;
+    vertical-align:top;
+    border-bottom:1px solid rgba(255,255,255,.08);
+    font-size:13px;
+    line-height:1.6;
+  }
+  .docTable th{
+    background:rgba(255,255,255,.05);
+    font-weight:800;
+  }
+  .docTable tr:last-child td{
+    border-bottom:none;
+  }
+  .caseGrid{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap:12px;
+  }
+  .caseCard{
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:18px;
+    padding:16px;
+    background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+    position:relative;
+    overflow:hidden;
+  }
+  .caseCard:before{
+    content:"";
+    position:absolute;
+    inset:auto -35px -35px auto;
+    width:110px;
+    height:110px;
+    background:radial-gradient(circle, rgba(255,159,26,.18), transparent 65%);
+    pointer-events:none;
+  }
+  .caseType{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:999px;
+    padding:6px 10px;
+    background:rgba(0,0,0,.18);
+    font-size:11px;
+    margin-bottom:12px;
+  }
+  .caseTitle{
+    font-size:16px;
+    font-weight:800;
+    margin-bottom:8px;
+  }
+  .caseText{
+    font-size:13px;
+    line-height:1.65;
+    color:var(--muted);
+  }
+  .caseResult{
+    margin-top:12px;
+    padding-top:12px;
+    border-top:1px solid rgba(255,255,255,.1);
+    font-size:12px;
+    line-height:1.6;
+  }
+  .deliverGrid{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap:12px;
+  }
+  .deliverCard{
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:16px;
+    padding:14px;
+    background:rgba(255,255,255,.04);
+  }
+  .deliverCard h3{
+    margin:0 0 8px;
+    font-size:15px;
+  }
+  .deliverCard p{
+    margin:0;
+    font-size:13px;
+    line-height:1.6;
+    color:var(--muted);
+  }
+  .contactHint{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+  .contactMini{
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:14px;
+    padding:12px;
+    background:rgba(255,255,255,.04);
+    font-size:13px;
+    line-height:1.6;
+  }
+  @media (max-width: 920px){
+    .grid{grid-template-columns: 1fr}
+    .caseGrid{grid-template-columns:1fr}
+    .deliverGrid{grid-template-columns:1fr}
+    .contactHint{grid-template-columns:1fr}
+  }
+  @media (max-width: 820px){
+    .cards{grid-template-columns:1fr}
+    .split{grid-template-columns:1fr}
+  .hero h1{font-size:26px}
+}
+  </style>
+  <link rel="stylesheet" href="dept-shared.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="topbar">
+      <div class="brand">
+        <div class="kicker">DEPARTMENT</div>
+        <div class="title">태양광사업</div>
+      </div>
+      <div class="actions">
+        <a class="btn" href="../index.html">로비로</a>
+        <a class="btn" href="resources.html">자료실</a>
+        <a class="btn primary" href="#contact">사업 문의</a>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="hero">
+        <div class="pill"><span class="dot"></span><span class="small">지붕형 · 영농형 · 주민참여형 · RE100 · 협동조합 설립</span></div>
+        <h1>태양광 발전의 설계와 시공을 넘어,<br>인허가·문서·조합 구조까지 함께 설계합니다.</h1>
+        <p>누리온홀딩스 태양광사업 부문은 지붕형, 주차장형, 영농형, 주민참여형 태양광과 RE100, 탄소중립 재생에너지 사업을 기반으로, 프로젝트 실행에 필요한 인허가 대응, 협동조합 설립 대행, 운영 문서 정리까지 통합적으로 지원합니다.</p>
+
+        <div class="heroRow">
+          <div class="heroMedia">
+            <img src="./solar-hero-nurion.svg" alt="태양광사업 히어로 이미지" onerror="this.style.display='none';this.parentElement.style.background='linear-gradient(135deg, rgba(255,255,255,.06), rgba(0,0,0,.25))';" />
+            <div class="tag"><span class="dot"></span><span>태양광 개발 · 시공 · 문서 · 조합 지원</span></div>
+          </div>
+
+          <div class="note">
+            <span class="dot"></span>
+            <span class="small">사업성 검토부터 주민참여형 구조, 각종 인허가 기초 대응, PM 문서 정리, 협동조합 설립 대행까지 실무 중심으로 연결합니다.</span>
+          </div>
+
+          <div class="ctaBar">
+            <a class="btn primary" href="#contact">사업 문의</a>
+            <a class="btn" href="#service">서비스 보기</a>
+          </div>
+        </div>
+      </section>
+
+      <aside class="quick">
+        <h2>핵심 제공 가치</h2>
+        <div class="quickGrid">
+          <div class="qItem"><div class="qTop"><div class="qIcon">☀️</div><div class="qTitle">다양한 사업 유형</div></div><div class="qDesc">지붕형·영농형·주차장형·주민참여형</div></div>
+          <div class="qItem"><div class="qTop"><div class="qIcon">📄</div><div class="qTitle">문서·인허가 지원</div></div><div class="qDesc">기초 문서·대관·절차 정리</div></div>
+          <div class="qItem"><div class="qTop"><div class="qIcon">🤝</div><div class="qTitle">협동조합 설립</div></div><div class="qDesc">정관·총회·주민참여 구조 설계</div></div>
+          <div class="qItem"><div class="qTop"><div class="qIcon">📈</div><div class="qTitle">수익모델 검토</div></div><div class="qDesc">RE100·주민참여형·운영 구조</div></div>
+        </div>
+        <div class="infoList">
+          <div class="infoItem">
+            <strong>적합한 대상</strong>
+            태양광 사업을 준비하는 법인, 지붕형·영농형·주민참여형 사업 검토자, RE100 대응 기업, 태양광협동조합 설립 추진 주체
+          </div>
+          <div class="infoItem">
+            <strong>핵심 방향</strong>
+            단순 시공 소개가 아니라 사업 구조, 문서 체계, 인허가 대응, 주민참여형 운영 기반까지 함께 정리합니다.
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="section" id="service">
+      <h2>서비스 구성</h2>
+      <p class="sectionLead">태양광사업은 시공만으로 끝나지 않습니다. 사업 유형별 구조, 인허가, 주민참여, 협동조합, 운영 문서와 후속 관리까지 연결되어야 실제 사업이 돌아갑니다.</p>
+      <div class="cards">
+        <div class="card">
+          <div class="cardHead">
+            <div class="badge">🏭</div>
+            <div>
+              <h3>건물형 · 지붕형 태양광</h3>
+              <p>공장, 창고, 공공건물, 축사 등 건물 기반 태양광 설치 구조를 검토하고 사업 흐름을 정리합니다.</p>
+            </div>
+          </div>
+          <ul>
+            <li>지붕형 태양광 사업 검토</li>
+            <li>건물 특성별 구조 검토</li>
+            <li>시공 전 기초 요건 정리</li>
+            <li>운영 및 관리 흐름 검토</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="cardHead">
+            <div class="badge">🌾</div>
+            <div>
+              <h3>영농형 · 노지형 태양광</h3>
+              <p>영농형, 전·답, 임야, 도로사면 등 부지 특성에 맞는 사업 유형을 검토합니다.</p>
+            </div>
+          </div>
+          <ul>
+            <li>영농형 구조 검토</li>
+            <li>노지형 부지 검토</li>
+            <li>주민참여 가능성 검토</li>
+            <li>사업 추진 단계 정리</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="cardHead">
+            <div class="badge">🅿️</div>
+            <div>
+              <h3>주차장형 · 특수 구조 태양광</h3>
+              <p>주차장, 방음터널, 철도, 수로 등 특수 구조 기반 사업 유형을 정리합니다.</p>
+            </div>
+          </div>
+          <ul>
+            <li>주차장 태양광 구조</li>
+            <li>특수 구조 적용 검토</li>
+            <li>기초 문서 정리</li>
+            <li>사업 확장 시나리오 도출</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="cardHead">
+            <div class="badge">🌍</div>
+            <div>
+              <h3>RE100 · 탄소중립 재생에너지</h3>
+              <p>기업의 RE100 대응과 탄소중립 목표에 맞춘 재생에너지 활용 구조를 검토합니다.</p>
+            </div>
+          </div>
+          <ul>
+            <li>RE100 대응 방향</li>
+            <li>자가용·판매형 검토</li>
+            <li>재생에너지 활용 구조</li>
+            <li>기업 맞춤형 적용 검토</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="cardHead">
+            <div class="badge">👥</div>
+            <div>
+              <h3>주민참여형 · 태양광협동조합 설립 대행</h3>
+              <p>주민참여형 태양광 구조 설계와 협동조합 설립 준비 문서를 실무형으로 정리합니다.</p>
+            </div>
+          </div>
+          <ul>
+            <li>주민참여형 사업 구조 검토</li>
+            <li>협동조합 정관 기초안</li>
+            <li>창립총회 회의록 초안</li>
+            <li>조합원 안내문·설명자료</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="cardHead">
+            <div class="badge">📑</div>
+            <div>
+              <h3>인허가 · PM 문서 · 운영지원</h3>
+              <p>대관, 인허가 대응, 사업 문서, PM 문안, 실무 협의 문서까지 프로젝트 기반으로 정리합니다.</p>
+            </div>
+          </div>
+          <ul>
+            <li>인허가 기초 문서 정리</li>
+            <li>PM 계약/업무범위 문안</li>
+            <li>협의·합의 문서 초안</li>
+            <li>운영 기준 및 관리 문서</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>회사 및 사업 배경</h2>
+      <p class="sectionLead">업로드된 회사소개서 기준의 핵심 정보에 맞춰, 태양광사업 페이지에 적합한 내용만 추려 반영했습니다.</p>
+      <table class="docTable">
+        <thead>
+          <tr>
+            <th>구분</th>
+            <th>핵심 내용</th>
+            <th>비고</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>회사 개요</td>
+            <td>청정 에너지 태양광발전 에너지 시스템 제공 기업, 태양광 설치공사 및 태양광 구조물 제작 중심</td>
+            <td>회사소개서 기반</td>
+          </tr>
+          <tr>
+            <td>연혁</td>
+            <td>2014 설립, 2015 태양광사업 본격 가동, 2018 구조물 제작·시공 시작, 2023 예산 지사 설립, 2024 서울대 탄소중립 산학협력단 구성</td>
+            <td>회사소개서 기반</td>
+          </tr>
+          <tr>
+            <td>사업 분야</td>
+            <td>주차장형, 지붕형, 영농형, 주민참여형, RE100, 탄소중립 재생에너지</td>
+            <td>회사소개서 기반</td>
+          </tr>
+          <tr>
+            <td>문서 확장</td>
+            <td>태양광협동조합 설립 대행, 정관·총회문서·안내문·설명자료, PM 문서 및 인허가 기초 문서 지원</td>
+            <td>누리온용 확장</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section">
+      <h2>태양광협동조합 · 주민참여형 지원 범위</h2>
+      <p class="sectionLead">전자문서(edoc) 분야의 협동조합 내용을 태양광사업 구조에 맞게 이 페이지로 이관했습니다.</p>
+      <div class="cards">
+        <div class="card">
+          <div class="cardHead">
+            <div class="badge">📘</div>
+            <div>
+              <h3>정관 및 설립 문서</h3>
+              <p>협동조합 설립을 위한 기초 문서와 기본 구조를 정리합니다.</p>
+            </div>
+          </div>
+          <ul>
+            <li>정관 기초안</li>
+            <li>설립취지문 초안</li>
+            <li>창립총회 회의록 초안</li>
+            <li>조합원 가입 관련 문안</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="cardHead">
+            <div class="badge">📣</div>
+            <div>
+              <h3>주민참여형 설명자료</h3>
+              <p>주민 대상 설명과 참여 구조 이해를 돕는 문서를 정리합니다.</p>
+            </div>
+          </div>
+          <ul>
+            <li>주민 설명자료</li>
+            <li>참여 안내문</li>
+            <li>출자 및 운영 구조 설명</li>
+            <li>질의응답용 정리 문안</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="cardHead">
+            <div class="badge">🧭</div>
+            <div>
+              <h3>실행 프로세스 정리</h3>
+              <p>설립과 사업 추진이 실제로 이어질 수 있도록 단계별 흐름을 정리합니다.</p>
+            </div>
+          </div>
+          <ul>
+            <li>설립 준비 단계 정리</li>
+            <li>역할 분담 기준안</li>
+            <li>추진 일정 초안</li>
+            <li>후속 관리 문서 정리</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="cardHead">
+            <div class="badge">📄</div>
+            <div>
+              <h3>PM 및 협의 문서</h3>
+              <p>외부 파트너, 대관, 실무 협의에 필요한 문서를 실무형으로 정리합니다.</p>
+            </div>
+          </div>
+          <ul>
+            <li>업무범위서(SOW)</li>
+            <li>PM 계약 관련 문안</li>
+            <li>협의서·합의서 초안</li>
+            <li>검토 요청 문안</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>문구형 사업 사례</h2>
+      <p class="sectionLead">실명 공개가 어려운 건은 업종과 사업 유형 중심으로 재구성한 비공개형 사례로 정리했습니다.</p>
+      <div class="caseGrid">
+        <article class="caseCard">
+          <div class="caseType"><span class="dot"></span><span>지붕형 태양광형</span></div>
+          <div class="caseTitle">건물형 태양광 사업 구조를 정리한 사례</div>
+          <div class="caseText">공장 및 창고 지붕을 활용한 태양광 사업을 검토하면서 구조 검토, 추진 단계, 기본 문서 흐름을 정리해 실제 사업 검토가 가능하도록 만든 사례입니다.</div>
+          <div class="caseResult"><strong>정리 결과</strong><br>사업 검토 흐름 명확화, 구조 이해도 향상, 추진 준비 문서 정리</div>
+        </article>
+
+        <article class="caseCard">
+          <div class="caseType"><span class="dot"></span><span>주민참여형·조합형</span></div>
+          <div class="caseTitle">주민참여형 태양광과 협동조합 설립 준비를 함께 정리한 사례</div>
+          <div class="caseText">주민참여형 모델을 추진하면서 조합원 참여 구조, 정관 초안, 총회 문서, 안내자료를 단계별로 정리하여 설립 준비의 혼선을 줄인 사례입니다.</div>
+          <div class="caseResult"><strong>정리 결과</strong><br>주민참여 구조 명확화, 설명자료 일관성 확보, 설립 준비 속도 개선</div>
+        </article>
+
+        <article class="caseCard">
+          <div class="caseType"><span class="dot"></span><span>RE100·운영지원형</span></div>
+          <div class="caseTitle">재생에너지 활용 방향과 운영 문서를 함께 정리한 사례</div>
+          <div class="caseText">기업 맞춤형 RE100 대응 검토 과정에서 사업 방향, 기본 문서, 협의 문안, 후속 운영 기준을 함께 정리하여 사업 논의가 실제 실행으로 이어지도록 만든 사례입니다.</div>
+          <div class="caseResult"><strong>정리 결과</strong><br>수익구조 논의 정리, 협업 기준 명확화, 후속 검토 효율 개선</div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>제공 결과물</h2>
+      <p class="sectionLead">말로만 설명하는 자문이 아니라, 실제 사업 추진에 필요한 문서와 구조로 정리해드립니다.</p>
+      <div class="deliverGrid">
+        <div class="deliverCard">
+          <h3>사업 유형 검토안</h3>
+          <p>지붕형, 영농형, 주민참여형, RE100 등 사업 유형별 검토 포인트 정리</p>
+        </div>
+        <div class="deliverCard">
+          <h3>협동조합 설립 기초안</h3>
+          <p>정관, 창립총회 회의록, 조합원 안내문, 설명자료 초안</p>
+        </div>
+        <div class="deliverCard">
+          <h3>PM 문안 및 협의 문서</h3>
+          <p>업무범위서, 계약 기초 문안, 협의·합의 문서 초안</p>
+        </div>
+        <div class="deliverCard">
+          <h3>주민참여형 설명자료</h3>
+          <p>주민 설명, 참여 구조, 운영 방향을 정리한 문서</p>
+        </div>
+        <div class="deliverCard">
+          <h3>운영 기준 정리안</h3>
+          <p>추진 단계, 역할 분담, 후속 관리 기준 정리</p>
+        </div>
+        <div class="deliverCard">
+          <h3>후속 보완 방향</h3>
+          <p>대관, 인허가, 실행 단계, 운영구조를 위한 후속 보완 방향 제안</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>진행 흐름</h2>
+      <div class="split">
+        <div class="steps">
+          <div class="step"><div class="stepTitle">1. 기초 진단</div><div class="stepDesc">사업 목적, 부지 유형, 추진 방식, 주민참여 여부를 점검합니다.</div></div>
+          <div class="step"><div class="stepTitle">2. 구조 설계</div><div class="stepDesc">사업 유형, 참여 구조, 문서 방향, 역할 흐름을 설계합니다.</div></div>
+          <div class="step"><div class="stepTitle">3. 문서 정리</div><div class="stepDesc">협동조합·PM·설명자료·협의 문서를 실무형으로 정리합니다.</div></div>
+          <div class="step"><div class="stepTitle">4. 실행 지원</div><div class="stepDesc">후속 대관, 협의, 운영 정착을 위한 보완 방향까지 연결합니다.</div></div>
+        </div>
+        <div class="heroMedia" style="aspect-ratio: 16/12;">
+          <img src="./solar-process-nurion.svg" alt="태양광사업 프로세스 이미지" onerror="this.style.display='none';this.parentElement.style.background='linear-gradient(135deg, rgba(255,255,255,.06), rgba(0,0,0,.25))';" />
+          <div class="tag"><span class="dot"></span><span>진단 → 구조 설계 → 문서 정리 → 실행 지원</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section faq">
+      <h2>자주 묻는 질문</h2>
+      <details><summary>태양광협동조합 설립 대행은 어디까지 가능한가요?</summary><p>설립 준비용 기초 문서, 정관 초안, 총회 문서, 안내자료, 역할 구조 정리까지 실무형으로 지원합니다.</p></details>
+      <details><summary>주민참여형 태양광도 함께 검토할 수 있나요?</summary><p>가능합니다. 주민참여형 구조와 협동조합 방식, 설명자료, 참여 흐름을 함께 검토할 수 있습니다.</p></details>
+      <details><summary>인허가를 직접 대행하나요?</summary><p>본 페이지는 인허가 관련 기초 문서 정리와 실무 구조 설명 중심이며, 실제 대관·인허가 진행 범위는 별도 협의가 필요합니다.</p></details>
+      <details><summary>RE100이나 탄소중립 대응도 연결되나요?</summary><p>예. 기업 상황에 따라 자가용, 판매형, 주민참여형 등 다양한 재생에너지 활용 방향을 함께 검토할 수 있습니다.</p></details>
+      <details><summary>시공만 소개하는 페이지와 뭐가 다른가요?</summary><p>이 페이지는 시공 소개뿐 아니라 사업 구조, 참여 구조, 문서 정리, 협동조합 설립 대행까지 같이 보여주는 실무형 페이지입니다.</p></details>
+    </section>
+
+    <section class="section" id="contact">
+      <h2>사업 문의</h2>
+      <p class="sectionLead">태양광 개발, 주민참여형 구조, 협동조합 설립 대행, RE100 검토, 인허가 기초 문서, PM 문서 관련 요청을 남겨주시면 검토 후 연락드립니다.</p>
+      <div class="split">
+        <div class="card">
+          <h3>빠른 상담 요청</h3>
+          <p>사업 유형, 지역, 부지 성격, 주민참여 여부, 필요 문서 범위를 함께 남겨주시면 더 정확한 상담이 가능합니다.</p>
+          <form onsubmit="event.preventDefault(); alert('문의가 접수되었습니다. 확인 후 연락드리겠습니다.');">
+            <div style="display:grid; gap:10px; grid-template-columns: 1fr 1fr;">
+              <input required placeholder="성함" style="padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.22);color:#fff" />
+              <input required placeholder="연락처" style="padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.22);color:#fff" />
+            </div>
+            <input placeholder="이메일(선택)" style="margin-top:10px;width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.22);color:#fff" />
+            <textarea required placeholder="사업 유형 / 지역 / 부지 특성 / 주민참여 여부 / 필요 문서 / 요청 내용" rows="4" style="margin-top:10px;width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.22);color:#fff"></textarea>
+            <div class="ctaBar">
+              <button class="btn primary" type="submit">사업 문의</button>
+              <a class="btn" href="../index.html">로비로 돌아가기</a>
+            </div>
+          </form>
+
+          <div class="contactHint" style="margin-top:12px;">
+            <div class="contactMini">
+              <strong>사업 구조 문의</strong><br>
+              지붕형, 영농형, 주민참여형, RE100, 특수 구조 태양광
+            </div>
+            <div class="contactMini">
+              <strong>문서·조합 문의</strong><br>
+              협동조합 설립 대행, 정관, 회의록, 설명자료, PM 문서
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>연락 정보</h3>
+          <p>상세 범위는 사업 형태와 지역, 추진 주체에 따라 달라질 수 있으므로 사전 상담 후 정리해드립니다.</p>
+          <ul>
+            <li>상호명: 주식회사 누리온홀딩스</li>
+            <li>대표이사: 최인석</li>
+            <li>사업자등록번호: 702-86-03510</li>
+            <li>운영 파트너: 에테르니언</li>
+            <li>연락처: 010-5945-5925</li>
+            <li>이메일: aibrew@naver.com</li>
+            <li>주소: 세종특별자치시 집현중앙7로 6</li>
+          </ul>
+          <div class="note" style="margin-top:12px">
+            <span class="dot"></span>
+            <span class="small">실제 시공 기업 소개서의 방향을 반영하되, 누리온홀딩스 페이지에서는 사업 구조·문서·협동조합 설립 지원까지 함께 보이도록 확장했습니다.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer" style="align-items:flex-start; flex-direction:column;">
+      <span class="pill"><span class="dot"></span><span class="small">태양광사업 · NURION</span></span>
+      <span class="small">상호명: 주식회사 누리온홀딩스</span>
+      <span class="small">대표이사: 최인석 · 사업자등록번호: 702-86-03510</span>
+      <span class="small">연락처: 010-5945-5925 · 이메일: aibrew@naver.com</span>
+      <span class="small">주소: 세종특별자치시 집현중앙7로 6</span>
+      <span class="small">© NURION HOLDINGS. All rights reserved.</span>
+    </footer>
+  </div>
+</body>
+</html>

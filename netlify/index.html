@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Netlify 배포 시 사이트 루트가 netlify 폴더이면 자동(bundle.js 위치)으로 충분. 로컬에서 이 파일만 볼 때 루트와 맞추려면 content="auto" -->
   <meta name="lobby-asset-base" content="auto">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="favicon.ico" sizes="any">
   <title>NURION 3D 로비</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -14,7 +16,7 @@
       background: #000; display: flex; align-items: center; justify-content: center;
       transition: opacity 0.8s ease;
     }
-    #intro-container.hidden { opacity: 0; pointer-events: none; }
+    #intro-container.hidden { opacity: 0; pointer-events: none; visibility: hidden; z-index: 0; }
     #intro-video {
       width: 100%; height: 100%; object-fit: contain;
     }
@@ -25,7 +27,7 @@
       cursor: pointer; font-size: 14px; transition: background 0.2s;
     }
     #skip-intro:hover { background: rgba(0,150,255,0.7); }
-    #canvas-container { position: fixed; inset: 0; z-index: 1; cursor: grab; }
+    #canvas-container { position: fixed; inset: 0; z-index: 5; cursor: grab; }
     #canvas-container:active { cursor: grabbing; }
     #canvas-container canvas { display: block; width: 100%; height: 100%; pointer-events: auto; }
     .dept-panel{
@@ -251,7 +253,7 @@
     <section class="deptPage" id="dept-news" data-dept="news" aria-hidden="true"></section>
     <section class="deptPage" id="dept-edocs" data-dept="edocs" aria-hidden="true"></section>
     <section class="deptPage" id="dept-software" data-dept="software" aria-hidden="true"></section>
-    <section class="deptPage" id="dept-smartcity" data-dept="smartcity" aria-hidden="true"></section>
+    <section class="deptPage" id="dept-solar" data-dept="solar" aria-hidden="true"></section>
   </div>
 
   <div id="dept-panel" class="dept-panel hidden">
@@ -270,6 +272,7 @@
       window.__clearAutoHome = function() { /* no-op for compatibility */ };
     }
   </script>
-  <script type="module" src="bundle.js?v=20250328j"></script>
+  <!-- 로비: 아래 ?v= 는 프로젝트 루트 index.html 의 netlify/bundle.js?v= 와 동일하게 -->
+  <script type="module" src="bundle.js?v=20260329z9"></script>
 </body>
 </html>

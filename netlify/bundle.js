@@ -24778,7 +24778,7 @@ function DRACOWorker() {
 }
 
 // netlify/app.js
-var LOBBY_BUILD_STAMP = "20250328j";
+var LOBBY_BUILD_STAMP = "20260329z9";
 try {
   window.__LOBBY_BUILD_STAMP = LOBBY_BUILD_STAMP;
 } catch (_) {
@@ -24789,11 +24789,14 @@ var HIDE_TEXT_PATTERN = /^text\.|text$/i;
 var HIDE_FLOOR_LINE_MAT_PATTERN = /road_line|line_neon/;
 var DEBUG_LOG_GLB_NAMES = false;
 var HIDE_OBJECT_NAMES_EXACT = [];
-var FLOOR_OBSTACLE_NAME_PATTERN = /^(?:Cube|Circle)(?:\.\d+)?$/i;
-var FLOOR_OBSTACLE_MAX_CENTER_Y = 2.25;
-var FLOOR_OBSTACLE_MAX_TOP_Y = 3.35;
+var FLOOR_OBSTACLE_NAME_PATTERN = /^(?:Cube|Circle|Cylinder|Sphere|Cone)(?:\.\d+)?$/i;
+var FLOOR_OBSTACLE_NAMES_EXACT = [];
+var FLOOR_OBSTACLE_MAX_CENTER_ABOVE_FLOOR = 2.35;
+var FLOOR_OBSTACLE_MAX_TOP_ABOVE_FLOOR = 3.45;
 var FLOOR_OBSTACLE_MAX_DIM = 22;
-var FLOOR_OBSTACLE_MAX_BOTTOM_Y = 12;
+var FLOOR_OBSTACLE_MAX_ONFLOOR_GAP = 1.35;
+var FLOOR_CENTER_OBSTACLE_RADIUS_FRAC = 0.5;
+var FLOOR_TINY_OBSTACLE_RADIUS_FRAC = 0.38;
 function getBundleScriptBaseUrl() {
   const meta = document.querySelector('meta[name="lobby-asset-base"]');
   if (meta && meta.content != null) {
@@ -24820,13 +24823,23 @@ function assetUrl(relativePath) {
 var INTRO_SHARED = assetUrl("assets/intro.mp4");
 var VIDEO_AD_PATH = assetUrl("assets/intro.mp4");
 var LOBBY_25D_VIDEO = assetUrl("assets/lobby_2d5.mp4");
-var LOBBY_GLB_CACHE_BUST = "3";
+var LOBBY_GLB_CACHE_BUST = "8";
+var LOBBY_GLB_FILENAME = "nurion_lobby.glb";
 var LOBBY_MODEL_PATH = (() => {
-  const u = new URL(assetUrl("assets/nurion_lobby.glb"));
+  const u = new URL(assetUrl("assets/" + LOBBY_GLB_FILENAME));
   u.searchParams.set("v", LOBBY_GLB_CACHE_BUST);
   return u.href;
 })();
-var LOBBY_PROCESSING = "full";
+var LOBBY_PROCESSING = "minimal";
+function effectiveLobbyProcessing() {
+  try {
+    const q = location.search || "";
+    if (/[?&]lobbyMinimal=1(?:&|$)/i.test(q)) return "minimal";
+    if (/[?&]lobbyFull=1(?:&|$)/i.test(q)) return "full";
+  } catch (_) {
+  }
+  return LOBBY_PROCESSING;
+}
 function useMobileLobbyPath() {
   try {
     const q = location.search || "";
@@ -24846,8 +24859,18 @@ var DESK_LABELS = [
   // 4. Plane054
   { name: "Plane054", label: "\uC751\uC6A9 \uC18C\uD504\uD2B8\uC6E8\uC5B4 \uAC1C\uBC1C", planetTexture: assetUrl("assets/textures/planets/saturn_ring.png"), cameraPos: { x: 2, y: 3.5, z: -6 }, cameraTarget: { x: 1, y: 2, z: -3 } },
   // 5. Plane061
-  { name: "Plane061", label: "\uC2A4\uB9C8\uD2B8 City", planetTexture: assetUrl("assets/textures/planets/venus.png"), cameraPos: { x: -4, y: 3.5, z: -6 }, cameraTarget: { x: -2, y: 2, z: -3 } }
+  { name: "Plane061", label: "\uD0DC\uC591\uAD11 \uC0AC\uC5C5", planetTexture: assetUrl("assets/textures/planets/venus.png"), cameraPos: { x: -4, y: 3.5, z: -6 }, cameraTarget: { x: -2, y: 2, z: -3 } }
 ];
+var MONITOR_WALL_CUBE_MESH_NAMES = [
+  "Cube.023",
+  "Cube.027",
+  "Cube.028",
+  "Cube.029",
+  "Cube.032"
+];
+var WALL_DEPT_EXTRUDE_LAYERS = 18;
+var WALL_DEPT_LAYER_STEP = 0.014;
+var wallDeptExtrusionAnimators = [];
 console.info(
   "[LOBBY] \uC5D0\uC14B \uAE30\uC900:",
   getBundleScriptBaseUrl(),
@@ -24857,22 +24880,22 @@ console.info(
   LOBBY_GLB_CACHE_BUST,
   "(\uBC14\uAFC0 \uB54C\uB9C8\uB2E4 +1)",
   "| \uD6C4\uCC98\uB9AC:",
-  LOBBY_PROCESSING,
-  "(full=\uBAA8\uB2C8\uD130 \uD589\uC131\xB7\uBC14\uB2E5 \uCC98\uB9AC)"
+  effectiveLobbyProcessing(),
+  "(minimal=\uC6D0\uBCF8 | URL ?lobbyFull=1=\uD589\uC131\xB7\uBC14\uB2E5 \uB4F1 full)"
 );
 var DESK_TO_DEPTKEY = {
   "\uAE30\uC5C5\uCEE8\uC124\uD305": "consulting",
   "\uC778\uD130\uB137\uC2E0\uBB38\uC0AC": "news",
   "\uCC3D\uACE0\uD615 \uC804\uC790\uBB38\uC11C": "edocs",
   "\uC751\uC6A9 \uC18C\uD504\uD2B8\uC6E8\uC5B4 \uAC1C\uBC1C": "software",
-  "\uC2A4\uB9C8\uD2B8 City": "smartcity"
+  "\uD0DC\uC591\uAD11 \uC0AC\uC5C5": "solar"
 };
 var DESK_LINKS = {
   plane035: assetUrl("dept/consulting.html"),
   plane040: assetUrl("dept/news.html"),
   plane047: assetUrl("dept/edocs.html"),
   plane054: assetUrl("dept/software.html"),
-  plane061: assetUrl("dept/smartcity.html")
+  plane061: assetUrl("dept/solar.html")
 };
 var DEPT_CONTENT = {
   consulting: {
@@ -24919,15 +24942,15 @@ var DEPT_CONTENT = {
       { title: "4) \uBC30\uD3EC/\uC6B4\uC601", items: ["CI/CD", "Netlify/Vercel \uBC30\uD3EC", "\uC7A5\uC560 \uB300\uC751 \uB8F0", "\uC6B4\uC601 \uB9AC\uD3EC\uD2B8 \uC790\uB3D9\uD654"] }
     ]
   },
-  smartcity: {
-    kicker: "SMART CITY",
-    title: "\uC2A4\uB9C8\uD2B8 City",
-    sub: "\uB3C4\uC2DC/\uB2E8\uC9C0 \uB2E8\uC704\uC758 \uB370\uC774\uD130\xB7\uC5D0\uB108\uC9C0\xB7\uC548\uC804\xB7\uD3B8\uC758 \uC11C\uBE44\uC2A4\uB97C \uD1B5\uD569",
+  solar: {
+    kicker: "SOLAR",
+    title: "\uD0DC\uC591\uAD11\uC0AC\uC5C5",
+    sub: "\uC9C0\uBD95\uD615\xB7\uC601\uB18D\uD615\xB7\uC8FC\uBBFC\uCC38\uC5EC\uD615\xB7RE100\xB7\uD611\uB3D9\uC870\uD569 \uC124\uB9BD\uAE4C\uC9C0 \uD1B5\uD569 \uC9C0\uC6D0",
     blocks: [
-      { title: "1) \uB3C4\uC2DC \uB370\uC774\uD130 \uD50C\uB7AB\uD3FC", items: ["\uC13C\uC11C/\uB370\uC774\uD130 \uC218\uC9D1", "\uB300\uC2DC\uBCF4\uB4DC", "\uC54C\uB9BC/\uC774\uBCA4\uD2B8 \uB8F0", "\uB370\uC774\uD130 \uD45C\uC900\uD654"] },
-      { title: "2) \uC5D0\uB108\uC9C0/\uC804\uB825 \uC5F0\uACC4", items: ["\uD0DC\uC591\uAD11/ESS \uBAA8\uB2C8\uD130\uB9C1", "\uD53C\uD06C \uC808\uAC10", "\uC218\uC694\uC608\uCE21", "\uD611\uB3D9\uC870\uD569 \uBAA8\uB378 \uD655\uC7A5"] },
-      { title: "3) \uC548\uC804/\uC2DC\uC124 \uAD00\uB9AC", items: ["CCTV/\uCD9C\uC785 \uC5F0\uB3D9", "\uC2DC\uC124 \uC810\uAC80 \uC2A4\uCF00\uC904", "\uBBFC\uC6D0 \uCC98\uB9AC \uD750\uB984", "\uC7A5\uC560 \uB300\uC751 \uB9E4\uB274\uC5BC"] },
-      { title: "4) \uC2DC\uBBFC/\uC785\uC8FC\uC790 \uC11C\uBE44\uC2A4", items: ["\uBAA8\uBC14\uC77C \uC548\uB0B4", "\uC608\uC57D/\uACB0\uC81C", "\uCEE4\uBBA4\uB2C8\uD2F0 \uACF5\uC9C0", "\uAC1C\uC778\uD654 \uCD94\uCC9C"] }
+      { title: "1) \uC0AC\uC5C5 \uC720\uD615\xB7\uAD6C\uC870", items: ["\uC9C0\uBD95\uD615\xB7\uC601\uB18D\uD615\xB7\uC8FC\uCC28\uC7A5\uD615", "\uC8FC\uBBFC\uCC38\uC5EC\uD615 \uAC80\uD1A0", "RE100\xB7\uD0C4\uC18C\uC911\uB9BD \uBC29\uD5A5", "\uBD80\uC9C0\xB7\uAC74\uBB3C \uD2B9\uC131 \uC815\uB9AC"] },
+      { title: "2) \uD611\uB3D9\uC870\uD569\xB7\uBB38\uC11C", items: ["\uC815\uAD00\xB7\uCD1D\uD68C \uAE30\uCD08\uC548", "\uC8FC\uBBFC \uC124\uBA85\uC790\uB8CC", "PM\xB7\uD611\uC758 \uBB38\uC548", "\uC778\uD5C8\uAC00 \uAE30\uCD08 \uBB38\uC11C"] },
+      { title: "3) \uC778\uD5C8\uAC00\xB7\uC6B4\uC601", items: ["\uB300\uAD00\xB7\uC808\uCC28 \uC815\uB9AC", "\uC0AC\uC5C5 \uBB38\uC11C\xB7PM \uBC94\uC704", "\uC2E4\uBB34 \uD611\uC758 \uB3D9\uC120", "\uD6C4\uC18D \uC6B4\uC601 \uAE30\uC900"] },
+      { title: "4) \uC2E4\uD589\xB7\uD655\uC7A5", items: ["\uCD94\uC9C4 \uB2E8\uACC4\uBCC4 \uAC80\uD1A0", "\uC5ED\uD560 \uBD84\uB2F4", "\uD6C4\uC18D \uBCF4\uC644 \uBC29\uD5A5", "\uC6B4\uC601 \uC815\uCC29 \uC9C0\uC6D0"] }
     ]
   }
 };
@@ -24939,6 +24962,266 @@ var DESK_ARROW_PLANES = [
 ];
 var HIDE_PAGE_TEXT_PATTERN = /^text\.(00[3-6]|032|0(0[9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-3]))$/i;
 var LOBBY_BOUNDS = { minX: -20, maxX: 20, minY: 0, maxY: 20, minZ: -28, maxZ: 28 };
+var LOBBY_CAMERA_ANCHOR_NAME = "Cube002";
+var LOBBY_CAMERA_ANCHOR_FORWARD_M = 2;
+var LOBBY_CAMERA_ANCHOR_UP_M = 2;
+var _floorEstBox = new Box3();
+var _cubeAnchorBox = new Box3();
+var _v3AnchorPos = new Vector3();
+var _v3AnchorFwd = new Vector3();
+var _anchorQuat = new Quaternion();
+var _flipLookT = new Vector3();
+function estimateLobbyFloorSurfaceY(model, worldBox) {
+  const sy = worldBox.max.y - worldBox.min.y;
+  if (sy < 0.05) return null;
+  const lowBand = worldBox.min.y + sy * 0.28;
+  let best = worldBox.min.y;
+  let found = false;
+  model.updateMatrixWorld(true);
+  model.traverse((o) => {
+    if (!o.isMesh || !o.geometry) return;
+    const g = o.geometry;
+    if (!g.boundingBox) g.computeBoundingBox();
+    _floorEstBox.copy(g.boundingBox).applyMatrix4(o.matrixWorld);
+    const h = _floorEstBox.max.y - _floorEstBox.min.y;
+    const thin = h < Math.max(sy * 0.16, 0.28);
+    if (thin && _floorEstBox.max.y <= lowBand && _floorEstBox.max.y >= worldBox.min.y - 0.05) {
+      best = Math.max(best, _floorEstBox.max.y);
+      found = true;
+    }
+  });
+  return found ? best : null;
+}
+function expandLobbyBoundsFromModel(model) {
+  const box = new Box3().setFromObject(model);
+  if (box.isEmpty()) return;
+  const sx = box.max.x - box.min.x;
+  const sy = box.max.y - box.min.y;
+  const sz = box.max.z - box.min.z;
+  const span = Math.max(sx, sy, sz, 1);
+  const insetH = Math.min(Math.max(0.45, span * 0.07), sx * 0.45, sz * 0.45, 8);
+  LOBBY_BOUNDS.minX = box.min.x + insetH;
+  LOBBY_BOUNDS.maxX = box.max.x - insetH;
+  LOBBY_BOUNDS.minZ = box.min.z + insetH;
+  LOBBY_BOUNDS.maxZ = box.max.z - insetH;
+  const insetBottom = Math.min(4.2, Math.max(0.38, sy * 0.075));
+  const insetTop = Math.min(3.2, Math.max(0.55, sy * 0.14));
+  const meshFloorY = estimateLobbyFloorSurfaceY(model, box);
+  let minY = box.min.y + insetBottom;
+  if (meshFloorY != null && meshFloorY > box.min.y + 0.06) {
+    minY = Math.max(minY, meshFloorY - 0.03);
+  }
+  LOBBY_BOUNDS.minY = minY;
+  LOBBY_BOUNDS.maxY = box.max.y - insetTop;
+  if (meshFloorY != null) {
+    console.info("[LOBBY] \uBC14\uB2E5\uBA74 \uCD94\uC815 Y:", meshFloorY.toFixed(3), "(bbox.min:", box.min.y.toFixed(3), ")");
+  }
+  if (LOBBY_BOUNDS.minX >= LOBBY_BOUNDS.maxX) {
+    const m = (box.min.x + box.max.x) * 0.5;
+    LOBBY_BOUNDS.minX = m - 0.08;
+    LOBBY_BOUNDS.maxX = m + 0.08;
+  }
+  if (LOBBY_BOUNDS.minZ >= LOBBY_BOUNDS.maxZ) {
+    const m = (box.min.z + box.max.z) * 0.5;
+    LOBBY_BOUNDS.minZ = m - 0.08;
+    LOBBY_BOUNDS.maxZ = m + 0.08;
+  }
+  if (LOBBY_BOUNDS.minY >= LOBBY_BOUNDS.maxY) {
+    LOBBY_BOUNDS.minY = box.min.y + 0.08;
+    LOBBY_BOUNDS.maxY = box.max.y - 0.08;
+  }
+}
+function findLobbyObjectByName(model, name) {
+  const esc = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(`^${esc}$`, "i");
+  let found = null;
+  model.traverse((o) => {
+    if (found) return;
+    const n = (o.name || "").trim();
+    if (n && re.test(n)) found = o;
+  });
+  return found;
+}
+function getObjectWorldCenter(obj, out) {
+  _cubeAnchorBox.setFromObject(obj);
+  if (!_cubeAnchorBox.isEmpty()) {
+    _cubeAnchorBox.getCenter(out);
+    return out;
+  }
+  return obj.getWorldPosition(out);
+}
+function removeLobbyPeopleAndTextMeshes(model) {
+  const toRemove = [];
+  model.traverse((child) => {
+    if (!child.isMesh) return;
+    const n = (child.name || "").toLowerCase();
+    const mats = child.material ? Array.isArray(child.material) ? child.material : [child.material] : [];
+    const matName = mats.map((m) => m && m.name || "").join(" ").toLowerCase();
+    const rawName = child.name || "";
+    const isText = HIDE_TEXT_PATTERN.test(rawName) || n.includes("text");
+    const isPeople = HIDE_PEOPLE_PATTERN.test(n) || HIDE_PEOPLE_PATTERN.test(matName) || HIDE_OBJECT_NAMES_EXACT.includes(rawName);
+    if (isText || isPeople) toRemove.push(child);
+  });
+  toRemove.forEach((obj) => {
+    if (obj.parent) obj.parent.remove(obj);
+  });
+  if (toRemove.length) {
+    console.info("[LOBBY] people/text \uBA54\uC2DC \uC81C\uAC70:", toRemove.length, "(minimal\xB7full \uACF5\uD1B5)");
+  }
+}
+function frameLobbyCameraToModel(model) {
+  if (!camera || !controls || !model) return;
+  const box = new Box3().setFromObject(model);
+  if (box.isEmpty()) {
+    console.warn("[LOBBY] \uBC14\uC6B4\uB529 \uBC15\uC2A4\uAC00 \uBE44\uC5B4 \uC788\uC5B4 \uCE74\uBA54\uB77C \uC790\uB3D9 \uB9DE\uCDA4\uC744 \uAC74\uB108\uB701\uB2C8\uB2E4.");
+    return;
+  }
+  const outerSize = new Vector3();
+  box.getSize(outerSize);
+  const maxDim = Math.max(outerSize.x, outerSize.y, outerSize.z, 0.1);
+  const innerW = Math.max(0.05, LOBBY_BOUNDS.maxX - LOBBY_BOUNDS.minX);
+  const innerH = Math.max(0.05, LOBBY_BOUNDS.maxY - LOBBY_BOUNDS.minY);
+  const innerD = Math.max(0.05, LOBBY_BOUNDS.maxZ - LOBBY_BOUNDS.minZ);
+  const innerMin = Math.min(innerW, innerH, innerD);
+  model.updateMatrixWorld(true);
+  const anchor = findLobbyObjectByName(model, LOBBY_CAMERA_ANCHOR_NAME);
+  if (anchor) {
+    getObjectWorldCenter(anchor, _v3AnchorPos);
+    anchor.getWorldQuaternion(_anchorQuat);
+    _v3AnchorFwd.set(0, 0, -1).applyQuaternion(_anchorQuat).normalize();
+    camera.position.copy(_v3AnchorPos).addScaledVector(_v3AnchorFwd, LOBBY_CAMERA_ANCHOR_FORWARD_M);
+    camera.position.y += LOBBY_CAMERA_ANCHOR_UP_M;
+    controls.target.copy(_v3AnchorPos);
+    clampTargetAndCamera();
+    controls.update();
+    console.info(
+      "[LOBBY] \uC575\uCEE4 \uC9C4\uC785:",
+      LOBBY_CAMERA_ANCHOR_NAME,
+      "\u2192 \uB85C\uCEEC \u2212Z",
+      LOBBY_CAMERA_ANCHOR_FORWARD_M,
+      "m + \uC6D4\uB4DC Y",
+      LOBBY_CAMERA_ANCHOR_UP_M,
+      "m (\uC774\uD6C4 \uC2DC\uC120 180\xB0 \uBC18\uC804)"
+    );
+  } else {
+    const innerCx = (LOBBY_BOUNDS.minX + LOBBY_BOUNDS.maxX) * 0.5;
+    const innerCz = (LOBBY_BOUNDS.minZ + LOBBY_BOUNDS.maxZ) * 0.5;
+    const floorY = LOBBY_BOUNDS.minY;
+    const lookY = floorY + Math.min(Math.max(innerH * 0.12, 1), 1.45);
+    controls.target.set(innerCx, lookY, innerCz);
+    let eyeY = floorY + 2;
+    eyeY = Math.min(eyeY, LOBBY_BOUNDS.maxY - 0.15);
+    eyeY = Math.max(eyeY, LOBBY_BOUNDS.minY + 0.12);
+    const offX = innerW * 0.18;
+    const offZ = innerD * 0.16;
+    camera.position.set(innerCx + offX * 0.45, eyeY, innerCz + offZ * 0.4);
+    clampTargetAndCamera();
+    console.info(
+      "[LOBBY] \uBC14\uB2E5 +2m \uB208\uB192\uC774 \uC9C4\uC785 (\uB0B4\uBD80 W/H/D)",
+      innerW.toFixed(2),
+      innerH.toFixed(2),
+      innerD.toFixed(2),
+      "\u2014 \uC774\uD6C4 \uC2DC\uC120 180\xB0 \uBC18\uC804"
+    );
+  }
+  _flipLookT.copy(controls.target);
+  controls.target.copy(camera.position).multiplyScalar(2).sub(_flipLookT);
+  clampTargetAndCamera();
+  camera.near = Math.max(0.01, maxDim / 2e3);
+  camera.far = Math.max(600, maxDim * 80);
+  camera.updateProjectionMatrix();
+  if (scene && scene.fog) {
+    scene.fog.near = Math.max(8, innerMin * 1.2);
+    scene.fog.far = Math.max(80, maxDim * 18);
+  }
+  controls.minDistance = Math.max(0.75, innerMin * 0.045);
+  let maxOrb = Math.min(innerMin * 0.24, Math.min(innerW, innerD) * 0.26);
+  maxOrb = Math.min(maxOrb, 12);
+  controls.maxDistance = Math.max(controls.minDistance + 0.35, maxOrb);
+  controls.maxPolarAngle = Math.PI / 2 - 0.1;
+  controls.update();
+  clampTargetAndCamera();
+  controls.update();
+}
+var LOBBY_ENTRY_STORAGE_KEY = "nurionLobbyEntryV1";
+function lobbyMaxEyeYForSavedEntry() {
+  const floorY = LOBBY_BOUNDS.minY;
+  return Math.min(LOBBY_BOUNDS.maxY - 0.12, floorY + 2.35);
+}
+function applySavedLobbyEntryIfAny() {
+  if (!camera || !controls) return false;
+  try {
+    const raw = localStorage.getItem(LOBBY_ENTRY_STORAGE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (!data || typeof data.px !== "number" || typeof data.tx !== "number") return false;
+    const maxEye = lobbyMaxEyeYForSavedEntry();
+    const pyClamped = Math.max(LOBBY_BOUNDS.minY, Math.min(LOBBY_BOUNDS.maxY, data.py));
+    if (pyClamped > maxEye + 0.02) {
+      try {
+        localStorage.removeItem(LOBBY_ENTRY_STORAGE_KEY);
+      } catch (_) {
+      }
+      console.info(
+        "[LOBBY] \uC800\uC7A5\uB41C \uC9C4\uC785\uC810\uC774 \uC9C0\uBD95/\uB192\uC774 \uCABD\uC774\uB77C \uBB34\uC2DC\uD558\uACE0 \uC790\uB3D9 \uD504\uB808\uC774\uBC0D\uC744 \uC720\uC9C0\uD569\uB2C8\uB2E4. (\uC774\uC804\uC5D0 ?clearLobbyEntry=1 \uB610\uB294 __clearLobbyEntry \uB85C \uC9C0\uC6E0\uC744 \uC218 \uC788\uC74C)"
+      );
+      return false;
+    }
+    camera.position.set(data.px, data.py, data.pz);
+    controls.target.set(data.tx, data.ty, data.tz);
+    camera.updateProjectionMatrix();
+    controls.update();
+    clampTargetAndCamera();
+    controls.update();
+    console.info("[LOBBY] \uC800\uC7A5\uB41C \uC9C4\uC785 \uCE74\uBA54\uB77C \uC801\uC6A9 (\uC800\uC7A5 \uC2DC\uAC01:", data.savedAt || "?", ")");
+    return true;
+  } catch (e) {
+    console.warn("[LOBBY] \uC800\uC7A5 \uC9C4\uC785\uC810 \uD30C\uC2F1 \uC2E4\uD328:", e);
+    return false;
+  }
+}
+function saveLobbyEntryToStorage() {
+  if (!camera || !controls) {
+    console.warn("[LOBBY] \uCE74\uBA54\uB77C\uAC00 \uC5C6\uC5B4 \uC800\uC7A5\uD560 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4.");
+    return;
+  }
+  const p = camera.position;
+  const t = controls.target;
+  const data = {
+    px: p.x,
+    py: p.y,
+    pz: p.z,
+    tx: t.x,
+    ty: t.y,
+    tz: t.z,
+    savedAt: (/* @__PURE__ */ new Date()).toISOString()
+  };
+  try {
+    localStorage.setItem(LOBBY_ENTRY_STORAGE_KEY, JSON.stringify(data));
+    captureLobbyRecoveryCamera();
+    console.info("[LOBBY] \uD604\uC7AC \uC2DC\uC810\uC774 \uB85C\uBE44 \uC9C4\uC785\uC810\uC73C\uB85C \uC800\uC7A5\uB418\uC5C8\uC2B5\uB2C8\uB2E4. \uC0C8\uB85C\uACE0\uCE68 \uD6C4 \uC774 \uC704\uCE58\uC5D0\uC11C \uC2DC\uC791\uD569\uB2C8\uB2E4.", data);
+  } catch (e) {
+    console.error("[LOBBY] localStorage \uC800\uC7A5 \uC2E4\uD328:", e);
+  }
+}
+function clearLobbyEntryStorage() {
+  try {
+    localStorage.removeItem(LOBBY_ENTRY_STORAGE_KEY);
+    console.info("[LOBBY] \uC800\uC7A5\uB41C \uC9C4\uC785\uC810\uC744 \uC0AD\uC81C\uD588\uC2B5\uB2C8\uB2E4. \uB2E4\uC74C \uB85C\uB4DC\uB294 \uC790\uB3D9 \uD504\uB808\uC774\uBC0D\uC744 \uC0AC\uC6A9\uD569\uB2C8\uB2E4.");
+  } catch (e) {
+  }
+}
+function maybeClearLobbyEntryFromUrl() {
+  try {
+    if (/[?&]clearLobbyEntry=1(?:&|$)/i.test(location.search || "")) clearLobbyEntryStorage();
+  } catch (_) {
+  }
+}
+try {
+  window.__saveLobbyEntry = saveLobbyEntryToStorage;
+  window.__clearLobbyEntry = clearLobbyEntryStorage;
+} catch (_) {
+}
 var scene;
 var camera;
 var renderer;
@@ -24963,7 +25246,7 @@ var deptPages = /* @__PURE__ */ new Map([
   ["news", document.getElementById("dept-news")],
   ["edocs", document.getElementById("dept-edocs")],
   ["software", document.getElementById("dept-software")],
-  ["smartcity", document.getElementById("dept-smartcity")]
+  ["solar", document.getElementById("dept-solar")]
 ]);
 function dmOpen() {
   if (!deskModal) return;
@@ -25022,11 +25305,11 @@ document.addEventListener("click", (e) => {
   if (back) closeDept();
 });
 window.addEventListener("load", () => {
-  const m = location.hash.match(/^#dept-(consulting|news|edocs|software|smartcity)$/);
+  const m = location.hash.match(/^#dept-(consulting|news|edocs|software|solar)$/);
   if (m) openDept(m[1], { updateHash: false });
 });
 window.addEventListener("hashchange", () => {
-  const m = location.hash.match(/^#dept-(consulting|news|edocs|software|smartcity)$/);
+  const m = location.hash.match(/^#dept-(consulting|news|edocs|software|solar)$/);
   if (m) openDept(m[1], { updateHash: false });
   else closeDept({ updateHash: false });
 });
@@ -25090,6 +25373,48 @@ var isMovingToTarget = false;
 var targetPosition = new Vector3();
 var targetLookAt = new Vector3();
 var MOVE_SPEED = 0.05;
+var recoveryCameraPosition = new Vector3();
+var recoveryCameraCaptured = false;
+var lastLobbyInputAt = 0;
+var suppressIdleRecoveryResetUntil = 0;
+var IDLE_RECOVERY_MS = 3e3;
+var EDGE_RECOVERY_MS = 1e3;
+function captureLobbyRecoveryCamera() {
+  if (!camera || !controls) return;
+  recoveryCameraPosition.copy(camera.position);
+  recoveryCameraCaptured = true;
+}
+function applyIdleRecoveryToCamera() {
+  if (!camera || !controls || !recoveryCameraCaptured) return;
+  try {
+    if (window.__isMobile) return;
+  } catch (_) {
+  }
+  if (isMovingToTarget) return;
+  const dir = new Vector3().subVectors(controls.target, camera.position);
+  const len = dir.length();
+  if (len < 1e-4) {
+    lastLobbyInputAt = performance.now();
+    return;
+  }
+  dir.multiplyScalar(1 / len);
+  const dist = Math.max(controls.minDistance + 1e-3, Math.min(controls.maxDistance, len));
+  camera.position.copy(recoveryCameraPosition);
+  controls.target.copy(recoveryCameraPosition).addScaledVector(dir, dist);
+  clampTargetAndCamera();
+  controls.update();
+  suppressIdleRecoveryResetUntil = performance.now() + 450;
+  lastLobbyInputAt = performance.now();
+}
+function pingIdleRecoveryUserActivity() {
+  if (performance.now() < suppressIdleRecoveryResetUntil) return;
+  if (!recoveryCameraCaptured) return;
+  lastLobbyInputAt = performance.now();
+}
+try {
+  window.__captureLobbyRecoveryCamera = captureLobbyRecoveryCamera;
+} catch (_) {
+}
 function enterMainAfterIntro() {
   if (!useMobileLobbyPath()) return;
   const canvas = document.getElementById("canvas-container");
@@ -25139,6 +25464,9 @@ function initIntro() {
     }
     try {
       container.classList.add("hidden");
+      container.style.zIndex = "0";
+      container.style.visibility = "hidden";
+      container.style.display = "none";
     } catch (e) {
     }
     setTimeout(() => {
@@ -25217,6 +25545,166 @@ function initIntro() {
   } catch (e) {
   }
   skipBtn && skipBtn.addEventListener("click", showLobby);
+}
+function createDeptNameAlphaTexture(text) {
+  const w = 1536;
+  const h = 640;
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, w, h);
+  const pad = Math.min(w, h) * 0.06;
+  const len = Math.max(text.length, 4);
+  const fontSize = Math.min(128, Math.floor((w - pad * 2) / (len * 0.82)));
+  ctx.font = `italic 700 ${fontSize}px "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(text, w / 2, h / 2);
+  const tex = new CanvasTexture(canvas);
+  tex.colorSpace = SRGBColorSpace;
+  tex.wrapS = ClampToEdgeWrapping;
+  tex.wrapT = ClampToEdgeWrapping;
+  tex.needsUpdate = true;
+  return tex;
+}
+var _wallFaceCenterA = new Vector3();
+var _wallFaceCenterB = new Vector3();
+var _wallNL = new Vector3();
+var _lobbyMidForWall = new Vector3();
+var _wallBasePos = new Vector3();
+function addWallCubeDeptExtrudedAnimatedLabel(mesh, text) {
+  if (!mesh?.isMesh || !mesh.geometry || mesh.userData.__wallDeptLabel) return;
+  const g = mesh.geometry;
+  if (!g.boundingBox) g.computeBoundingBox();
+  const min = g.boundingBox.min;
+  const max = g.boundingBox.max;
+  const sx = max.x - min.x;
+  const sy = max.y - min.y;
+  const sz = max.z - min.z;
+  const midLocal = new Vector3((min.x + max.x) * 0.5, (min.y + max.y) * 0.5, (min.z + max.z) * 0.5);
+  _lobbyMidForWall.set(
+    (LOBBY_BOUNDS.minX + LOBBY_BOUNDS.maxX) * 0.5,
+    (LOBBY_BOUNDS.minY + LOBBY_BOUNDS.maxY) * 0.5,
+    (LOBBY_BOUNDS.minZ + LOBBY_BOUNDS.maxZ) * 0.5
+  );
+  mesh.worldToLocal(_lobbyMidForWall);
+  const dims = [
+    { name: "x", size: sx },
+    { name: "y", size: sy },
+    { name: "z", size: sz }
+  ];
+  dims.sort((a, b) => a.size - b.size);
+  const thin = dims[0].name;
+  let planeW;
+  let planeH;
+  if (thin === "x") {
+    planeW = sz * 0.9;
+    planeH = sy * 0.9;
+    _wallFaceCenterA.set(min.x, midLocal.y, midLocal.z);
+    _wallNL.set(-1, 0, 0);
+    _wallFaceCenterB.set(max.x, midLocal.y, midLocal.z);
+  } else if (thin === "z") {
+    planeW = sx * 0.9;
+    planeH = sy * 0.9;
+    _wallFaceCenterA.set(midLocal.x, midLocal.y, min.z);
+    _wallNL.set(0, 0, -1);
+    _wallFaceCenterB.set(midLocal.x, midLocal.y, max.z);
+  } else {
+    planeW = sx * 0.9;
+    planeH = sz * 0.9;
+    _wallFaceCenterA.set(midLocal.x, min.y, midLocal.z);
+    _wallNL.set(0, -1, 0);
+    _wallFaceCenterB.set(midLocal.x, max.y, midLocal.z);
+  }
+  const nB = _wallNL.clone().negate();
+  const dotA = _wallNL.dot(_lobbyMidForWall.clone().sub(_wallFaceCenterA));
+  const dotB = nB.dot(_lobbyMidForWall.clone().sub(_wallFaceCenterB));
+  const useA = dotA >= dotB;
+  const faceCenter = useA ? _wallFaceCenterA : _wallFaceCenterB;
+  const nLoc = useA ? _wallNL : nB;
+  nLoc.normalize();
+  const tex = createDeptNameAlphaTexture(text);
+  const group = new Group();
+  group.name = `__wall_dept_extrude__${text}`;
+  group.renderOrder = 14;
+  _wallBasePos.copy(faceCenter).addScaledVector(nLoc, 0.016);
+  group.position.copy(_wallBasePos);
+  group.quaternion.setFromUnitVectors(new Vector3(0, 0, 1), nLoc);
+  const cBack = new Color(334382);
+  const cFront = new Color(13434879);
+  for (let i = 0; i < WALL_DEPT_EXTRUDE_LAYERS; i++) {
+    const u = WALL_DEPT_EXTRUDE_LAYERS > 1 ? i / (WALL_DEPT_EXTRUDE_LAYERS - 1) : 1;
+    const col = cBack.clone().lerp(cFront, u);
+    const mat = new MeshBasicMaterial({
+      map: tex,
+      transparent: true,
+      opacity: 0.78 + u * 0.2,
+      alphaTest: 0.04,
+      depthWrite: u > 0.7,
+      depthTest: true,
+      side: DoubleSide,
+      color: col
+    });
+    const plane = new Mesh(new PlaneGeometry(planeW, planeH), mat);
+    plane.position.z = i * WALL_DEPT_LAYER_STEP;
+    plane.renderOrder = 10 + i;
+    group.add(plane);
+  }
+  mesh.add(group);
+  mesh.userData.__wallDeptLabel = true;
+  wallDeptExtrusionAnimators.push({
+    group,
+    basePos: _wallBasePos.clone(),
+    n: nLoc.clone(),
+    phase: Math.random() * Math.PI * 2,
+    tex
+  });
+}
+function updateWallDeptExtrusionLabels() {
+  const t = performance.now() * 1e-3;
+  for (let i = wallDeptExtrusionAnimators.length - 1; i >= 0; i--) {
+    const item = wallDeptExtrusionAnimators[i];
+    if (!item.group?.parent) {
+      wallDeptExtrusionAnimators.splice(i, 1);
+      continue;
+    }
+    const pulse = Math.sin(t * 1.35 + item.phase) * 0.042;
+    item.group.position.copy(item.basePos).addScaledVector(item.n, pulse);
+    if (item.tex) {
+      item.tex.offset.x = Math.sin(t * 0.62 + item.phase) * 0.038;
+      item.tex.offset.y = Math.cos(t * 0.48 + item.phase * 0.55) * 0.018;
+    }
+  }
+}
+function applyMonitorWallCubeDeptLabels(model) {
+  if (!model || MONITOR_WALL_CUBE_MESH_NAMES.length !== DESK_LABELS.length) return;
+  model.updateMatrixWorld(true);
+  let count = 0;
+  MONITOR_WALL_CUBE_MESH_NAMES.forEach((raw, i) => {
+    const label = DESK_LABELS[i]?.label || "";
+    if (!label) return;
+    const obj = findLobbyObjectByName(model, raw.trim());
+    if (!obj) {
+      console.warn("[LOBBY] \uBCBD Cube GLB\uC5D0\uC11C \uCC3E\uC9C0 \uBABB\uD568(\uC774\uB984\xB7\uB300\uC18C\uBB38\uC790 \uD655\uC778):", raw);
+      return;
+    }
+    if (obj.isMesh) {
+      addWallCubeDeptExtrudedAnimatedLabel(obj, label);
+      count++;
+      return;
+    }
+    let applied = false;
+    obj.traverse((child) => {
+      if (applied || !child.isMesh) return;
+      addWallCubeDeptExtrudedAnimatedLabel(child, label);
+      applied = true;
+      count++;
+    });
+    if (!applied) console.warn("[LOBBY] \uBCBD Cube \uC624\uBE0C\uC81D\uD2B8\uC5D0 Mesh \uC790\uC2DD \uC5C6\uC74C:", raw, obj.type);
+  });
+  if (count) console.info("[LOBBY] \uBCBD Cube \uC0AC\uC5C5\uBD80\uBA85 \uB3CC\uCD9C\xB7\uC6C0\uC9C1\uC784 \uB77C\uBCA8 \uBD80\uCC29:", count);
 }
 function createCylinderLabelTexture(text) {
   const w = 2048, h = 512;
@@ -25351,33 +25839,166 @@ function normalizePlaneName(name) {
   if (!name) return "";
   return name.toLowerCase().replace(/\./g, "").replace(/_\d+$/, "");
 }
+function getDeptPageUrlForPlanetSlot(slot1to5) {
+  const i = slot1to5 - 1;
+  if (i < 0 || i >= DESK_LABELS.length) return null;
+  const key = normalizePlaneName(DESK_LABELS[i].name);
+  return DESK_LINKS[key] || null;
+}
+function findPlanetClickSlotFromObject(obj) {
+  let cur = obj;
+  while (cur) {
+    const n = (cur.name || "").trim();
+    const m = /^monitor_planet(\d+)$/i.exec(n);
+    if (m) {
+      const idx = parseInt(m[1], 10);
+      if (idx >= 1 && idx <= 5) return idx;
+    }
+    cur = cur.parent;
+  }
+  let cur2 = obj;
+  while (cur2) {
+    const key = (cur2.name || "").trim().toLowerCase();
+    const wi = MONITOR_WALL_CUBE_MESH_NAMES.findIndex((x) => x.trim().toLowerCase() === key);
+    if (wi >= 0) return wi + 1;
+    cur2 = cur2.parent;
+  }
+  return null;
+}
+function openDeptForPlanetSlot(slot1to5, hitPoint) {
+  const url = getDeptPageUrlForPlanetSlot(slot1to5);
+  if (url) {
+    window.location.href = url;
+    return true;
+  }
+  const i = slot1to5 - 1;
+  const label = DESK_LABELS[i]?.label;
+  if (!label) return false;
+  const deptKey = DESK_TO_DEPTKEY[label] || null;
+  const deskId = normalizePlaneName(DESK_LABELS[i].name);
+  selectedDeskData = {
+    deptKey,
+    label,
+    deskId,
+    planetIndex: i,
+    planetPath: DESK_LABELS[i]?.planetTexture || null,
+    hitPoint: hitPoint || null
+  };
+  showDeptPanel(selectedDeskData);
+  return true;
+}
 var _floorObsBox = new Box3();
 var _floorObsSize = new Vector3();
 var _floorObsCenter = new Vector3();
+function isLobbyCameraAnchorMeshName(name) {
+  if (!name || !LOBBY_CAMERA_ANCHOR_NAME) return false;
+  return name.trim().toLowerCase() === LOBBY_CAMERA_ANCHOR_NAME.trim().toLowerCase();
+}
 function removeFloorObstacleMeshes(model) {
   const deskKeys = new Set(DESK_LABELS.map((d) => normalizePlaneName(d.name)));
+  const deskArrowPlaneKeys = /* @__PURE__ */ new Set();
+  DESK_ARROW_PLANES.forEach((g) => {
+    g.names.forEach((n) => deskArrowPlaneKeys.add(normalizePlaneName(n)));
+  });
   const removed = [];
   model.updateMatrixWorld(true);
-  const toRemove = [];
+  expandLobbyBoundsFromModel(model);
+  const toRemoveSet = /* @__PURE__ */ new Set();
+  const worldBoxForFloor = new Box3().setFromObject(model);
+  const floorRefY = worldBoxForFloor.isEmpty() ? 0 : estimateLobbyFloorSurfaceY(model, worldBoxForFloor) ?? worldBoxForFloor.min.y;
+  const innerW = Math.max(0.05, LOBBY_BOUNDS.maxX - LOBBY_BOUNDS.minX);
+  const innerD = Math.max(0.05, LOBBY_BOUNDS.maxZ - LOBBY_BOUNDS.minZ);
+  const lobbyCx = (LOBBY_BOUNDS.minX + LOBBY_BOUNDS.maxX) * 0.5;
+  const lobbyCz = (LOBBY_BOUNDS.minZ + LOBBY_BOUNDS.maxZ) * 0.5;
+  const worldCx = worldBoxForFloor.isEmpty() ? lobbyCx : (worldBoxForFloor.min.x + worldBoxForFloor.max.x) * 0.5;
+  const worldCz = worldBoxForFloor.isEmpty() ? lobbyCz : (worldBoxForFloor.min.z + worldBoxForFloor.max.z) * 0.5;
+  const monitorWallCubeKeys = new Set(MONITOR_WALL_CUBE_MESH_NAMES.map((n) => n.trim().toLowerCase()));
+  const excludeDeskAndFloor = (o) => {
+    const name = (o.name || "").trim();
+    const low = name.toLowerCase();
+    if (monitorWallCubeKeys.has(low)) return true;
+    if (low.includes("floor")) return true;
+    if (isLobbyCameraAnchorMeshName(name)) return true;
+    if (deskKeys.has(normalizePlaneName(name))) return true;
+    if (deskArrowPlaneKeys.has(normalizePlaneName(name))) return true;
+    if (low.startsWith("desk_")) return true;
+    return false;
+  };
   model.traverse((o) => {
     if (!o.isMesh || o.userData?.isDesk) return;
     const name = (o.name || "").trim();
-    if (!name || !FLOOR_OBSTACLE_NAME_PATTERN.test(name)) return;
-    const low = name.toLowerCase();
-    if (low.includes("floor")) return;
-    if (deskKeys.has(normalizePlaneName(name))) return;
-    if (low.startsWith("desk_")) return;
+    if (!name) return;
+    const matchesPattern = FLOOR_OBSTACLE_NAME_PATTERN.test(name);
+    const matchesExact = FLOOR_OBSTACLE_NAMES_EXACT.includes(name);
+    if (!matchesPattern && !matchesExact) return;
+    if (excludeDeskAndFloor(o)) return;
     _floorObsBox.setFromObject(o);
     _floorObsBox.getSize(_floorObsSize);
     _floorObsBox.getCenter(_floorObsCenter);
     const maxDim = Math.max(_floorObsSize.x, _floorObsSize.y, _floorObsSize.z);
     if (maxDim > FLOOR_OBSTACLE_MAX_DIM) return;
-    if (_floorObsBox.min.y > FLOOR_OBSTACLE_MAX_BOTTOM_Y) return;
-    if (_floorObsCenter.y > FLOOR_OBSTACLE_MAX_CENTER_Y) return;
-    if (_floorObsBox.max.y > FLOOR_OBSTACLE_MAX_TOP_Y) return;
-    toRemove.push(o);
+    if (_floorObsBox.min.y < floorRefY - 0.2) return;
+    if (_floorObsBox.min.y > floorRefY + FLOOR_OBSTACLE_MAX_ONFLOOR_GAP) return;
+    if (_floorObsCenter.y > floorRefY + FLOOR_OBSTACLE_MAX_CENTER_ABOVE_FLOOR) return;
+    if (_floorObsBox.max.y > floorRefY + FLOOR_OBSTACLE_MAX_TOP_ABOVE_FLOOR) return;
+    toRemoveSet.add(o);
   });
-  toRemove.forEach((o) => {
+  const rLobby = Math.min(innerW, innerD) * FLOOR_CENTER_OBSTACLE_RADIUS_FRAC;
+  const rTiny = Math.min(innerW, innerD) * FLOOR_TINY_OBSTACLE_RADIUS_FRAC;
+  const tryPassCenterObstacle = (o, maxRadius, maxDimHi, maxYSize, maxCenterAbove) => {
+    if (!o.isMesh || o.userData?.isDesk) return;
+    if (toRemoveSet.has(o)) return;
+    if (excludeDeskAndFloor(o)) return;
+    _floorObsBox.setFromObject(o);
+    _floorObsBox.getSize(_floorObsSize);
+    _floorObsBox.getCenter(_floorObsCenter);
+    const dLobby = Math.hypot(_floorObsCenter.x - lobbyCx, _floorObsCenter.z - lobbyCz);
+    const dWorld = Math.hypot(_floorObsCenter.x - worldCx, _floorObsCenter.z - worldCz);
+    if (Math.min(dLobby, dWorld) > maxRadius) return;
+    const maxDim = Math.max(_floorObsSize.x, _floorObsSize.y, _floorObsSize.z);
+    const minH = Math.min(_floorObsSize.x, _floorObsSize.z);
+    if (maxDim > maxDimHi) return;
+    if (_floorObsSize.y > maxYSize) return;
+    if (_floorObsBox.min.y < floorRefY - 0.2) return;
+    if (_floorObsBox.min.y > floorRefY + FLOOR_OBSTACLE_MAX_ONFLOOR_GAP) return;
+    if (_floorObsCenter.y > floorRefY + maxCenterAbove) return;
+    if (_floorObsSize.y < 0.22 && minH > 2.5) return;
+    toRemoveSet.add(o);
+  };
+  model.traverse((o) => {
+    tryPassCenterObstacle(o, rLobby, 12, 5, 2.85);
+  });
+  model.traverse((o) => {
+    tryPassCenterObstacle(o, rTiny, 3.2, 2.45, 2.65);
+  });
+  const roomMinSpan = Math.min(innerW, innerD);
+  const tryPassInRoomFloorClutter = (o) => {
+    if (!o.isMesh || o.userData?.isDesk) return;
+    if (toRemoveSet.has(o)) return;
+    if (excludeDeskAndFloor(o)) return;
+    _floorObsBox.setFromObject(o);
+    _floorObsBox.getSize(_floorObsSize);
+    _floorObsBox.getCenter(_floorObsCenter);
+    const minXZ = Math.min(_floorObsSize.x, _floorObsSize.z);
+    const maxXZ = Math.max(_floorObsSize.x, _floorObsSize.z);
+    const maxDim = Math.max(_floorObsSize.x, _floorObsSize.y, _floorObsSize.z);
+    if (maxDim > 14) return;
+    if (_floorObsBox.min.y < floorRefY - 0.2) return;
+    if (_floorObsBox.min.y > floorRefY + FLOOR_OBSTACLE_MAX_ONFLOOR_GAP) return;
+    if (_floorObsCenter.y > floorRefY + 3.05) return;
+    if (_floorObsBox.max.y > floorRefY + FLOOR_OBSTACLE_MAX_TOP_ABOVE_FLOOR + 0.4) return;
+    if (_floorObsSize.y > 2 && minXZ < 0.38 && maxXZ > minXZ * 3) return;
+    if (_floorObsSize.y < 0.1 && maxXZ > 0.55 * roomMinSpan && minXZ > 0.2 * roomMinSpan) return;
+    if (_floorObsSize.y < 0.14 && minXZ > 0.38 * roomMinSpan) return;
+    if (_floorObsBox.max.x < LOBBY_BOUNDS.minX || _floorObsBox.min.x > LOBBY_BOUNDS.maxX) return;
+    if (_floorObsBox.max.z < LOBBY_BOUNDS.minZ || _floorObsBox.min.z > LOBBY_BOUNDS.maxZ) return;
+    if (maxXZ > 0.72 * roomMinSpan) return;
+    toRemoveSet.add(o);
+  };
+  model.traverse((o) => {
+    tryPassInRoomFloorClutter(o);
+  });
+  toRemoveSet.forEach((o) => {
     removed.push(o.name);
     try {
       if (o.material) {
@@ -25398,6 +26019,104 @@ function removeFloorObstacleMeshes(model) {
     }
   });
   if (removed.length) console.log("\u{1F9F9} \uBC14\uB2E5 \uC7A5\uC560\uBB3C \uC81C\uAC70:", removed.length, removed);
+}
+var _listNearBox = new Box3();
+var _listC = new Vector3();
+var _listS = new Vector3();
+function listLobbyMeshesNearCenter(maxRadiusFrac = 0.32) {
+  if (!lobbyModel) {
+    console.warn("[LOBBY] lobbyModel \uC5C6\uC74C \u2014 GLB \uB85C\uB4DC \uD6C4 \uB2E4\uC2DC \uC2E4\uD589\uD558\uC138\uC694.");
+    return [];
+  }
+  lobbyModel.updateMatrixWorld(true);
+  const worldBox = new Box3().setFromObject(lobbyModel);
+  if (worldBox.isEmpty()) return [];
+  const sx = worldBox.max.x - worldBox.min.x;
+  const sz = worldBox.max.z - worldBox.min.z;
+  const cx = (worldBox.min.x + worldBox.max.x) * 0.5;
+  const cz = (worldBox.min.z + worldBox.max.z) * 0.5;
+  const r = Math.min(sx, sz) * maxRadiusFrac;
+  const rows = [];
+  lobbyModel.traverse((o) => {
+    if (!o.isMesh) return;
+    _listNearBox.setFromObject(o);
+    _listNearBox.getCenter(_listC);
+    _listNearBox.getSize(_listS);
+    const dist = Math.hypot(_listC.x - cx, _listC.z - cz);
+    if (dist > r) return;
+    rows.push({
+      name: o.name || "(unnamed)",
+      uuid: o.uuid,
+      distXZ: dist,
+      cx: _listC.x,
+      cy: _listC.y,
+      cz: _listC.z,
+      sx: _listS.x,
+      sy: _listS.y,
+      sz: _listS.z
+    });
+  });
+  rows.sort((a, b) => a.distXZ - b.distXZ);
+  console.table(
+    rows.map((row) => ({
+      name: row.name,
+      uuid: row.uuid,
+      distXZ: +row.distXZ.toFixed(3),
+      cx: +row.cx.toFixed(2),
+      cy: +row.cy.toFixed(2),
+      cz: +row.cz.toFixed(2),
+      sx: +row.sx.toFixed(2),
+      sy: +row.sy.toFixed(2),
+      sz: +row.sz.toFixed(2)
+    }))
+  );
+  console.info(
+    "[LOBBY] \uD6C4\uBCF4 \uC81C\uAC70: __removeLobbyMeshByUuid('uuid') \u2014 \uC601\uAD6C \uBC18\uC601\uC740 \uBE14\uB80C\uB354\uC5D0\uC11C \uC774\uB984 \uC9C0\uC815 \uD6C4 app.js \uC758 FLOOR_OBSTACLE_NAMES_EXACT \uB4F1\uC5D0 \uCD94\uAC00"
+  );
+  return rows;
+}
+function removeLobbyMeshByUuid(uuid) {
+  if (!lobbyModel || !uuid) {
+    console.warn("[LOBBY] lobbyModel \uC774 \uC5C6\uAC70\uB098 uuid \uAC00 \uBE44\uC5B4 \uC788\uC2B5\uB2C8\uB2E4.");
+    return false;
+  }
+  let found = null;
+  lobbyModel.traverse((o) => {
+    if (o.isMesh && o.uuid === uuid) found = o;
+  });
+  if (!found) {
+    console.warn("[LOBBY] \uD574\uB2F9 uuid \uC758 Mesh \uC5C6\uC74C:", uuid);
+    return false;
+  }
+  if (isLobbyCameraAnchorMeshName(found.name)) {
+    console.warn("[LOBBY] \uCE74\uBA54\uB77C \uC575\uCEE4 \uBA54\uC2DC\uB294 \uC81C\uAC70\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4:", found.name);
+    return false;
+  }
+  try {
+    if (found.material) {
+      if (Array.isArray(found.material)) {
+        found.material.forEach((m) => {
+          if (m?.map) m.map.dispose?.();
+          m?.dispose?.();
+        });
+      } else {
+        if (found.material.map) found.material.map.dispose?.();
+        found.material.dispose?.();
+      }
+    }
+    found.geometry?.dispose?.();
+    found.parent?.remove(found);
+  } catch (e) {
+    console.warn("[LOBBY] Mesh \uC81C\uAC70 \uC2E4\uD328:", e);
+    return false;
+  }
+  console.info("[LOBBY] Mesh \uC81C\uAC70\uB428:", found.name || "(unnamed)", found.uuid);
+  return true;
+}
+try {
+  window.__listLobbyMeshesNearCenter = (frac) => listLobbyMeshesNearCenter(frac === void 0 ? 0.32 : frac);
+  window.__removeLobbyMeshByUuid = removeLobbyMeshByUuid;
+} catch (_) {
 }
 function hideDeptPanel() {
   selectedDeskData = null;
@@ -25547,6 +26266,9 @@ async function applyDeskLabelsAsync(model) {
   );
 }
 function applyMinimalLobbyPostProcess(model) {
+  removeLobbyPeopleAndTextMeshes(model);
+  removeFloorObstacleMeshes(model);
+  expandLobbyBoundsFromModel(model);
   model.traverse((child) => {
     if (child.isMesh) {
       child.castShadow = true;
@@ -25554,9 +26276,14 @@ function applyMinimalLobbyPostProcess(model) {
     }
   });
   scene.add(model);
+  expandLobbyBoundsFromModel(model);
+  applyMonitorWallCubeDeptLabels(model);
+  frameLobbyCameraToModel(model);
+  applySavedLobbyEntryIfAny();
+  captureLobbyRecoveryCamera();
   showGlbVerifyBannerIfRequested();
   console.info(
-    '[LOBBY] minimal \uBAA8\uB4DC: \uD6C4\uCC98\uB9AC \uC5C6\uC774 \uB85C\uB4DC\uB428. \uB370\uC2A4\uD06C/\uBC14\uB2E5\uC601\uC0C1/\uD37C\uC9C0\uB97C \uC4F0\uB824\uBA74 netlify/app.js \uC758 LOBBY_PROCESSING \uC744 "full" \uB85C \uBCC0\uACBD \uD6C4 bundle \uC7AC\uBE4C\uB4DC.'
+    '[LOBBY] minimal \uBAA8\uB4DC: \uB370\uC2A4\uD06C \uD589\uC131\xB7\uBC14\uB2E5\uC601\uC0C1 \uB4F1 full \uD6C4\uCC98\uB9AC \uC5C6\uC74C(\uC0AC\uB78C\xB7\uC7A5\uC560\uBB3C \uD734\uB9AC\uC2A4\uD2F1\xB7\uCE74\uBA54\uB77C\uB294 \uC801\uC6A9). full \uC740 ?lobbyFull=1 \uB610\uB294 LOBBY_PROCESSING="full" + npm run build:netlify'
   );
 }
 async function sniffFirstBytesFromUrl(url, maxLen = 16) {
@@ -25626,7 +26353,7 @@ function showGlbVerifyBannerIfRequested() {
       String(fp?.url || LOBBY_MODEL_PATH),
       "",
       "GLB\uB9CC \uAD50\uCCB4\uD588\uB294\uB370 \uC9C0\uBB38\uC774 \uADF8\uB300\uB85C \u2192 \uB2E4\uB978 \uACBD\uB85C \uD30C\uC77C\uC774\uAC70\uB098 \uCE90\uC2DC.",
-      "\uC9C0\uBB38\uC740 \uBC14\uB00C\uB294\uB370 \uD654\uBA74\uB9CC \uAC19\uC74C \u2192 full \uD6C4\uCC98\uB9AC\uAC00 \uB36E\uC74C. minimal \uB85C \uBE44\uAD50."
+      "\uC9C0\uBB38\uC740 \uBC14\uB00C\uB294\uB370 \uD654\uBA74\uB9CC \uC774\uC0C1\uD568 \u2192 ?lobbyFull=1 \uC774 \uBA54\uC2DC\uB97C \uC9C0\uC6E0\uC744 \uC218 \uC788\uC74C. \uAE30\uBCF8 minimal \uB85C \uBE44\uAD50."
     ];
     div.textContent = lines.join("\n");
     document.body.appendChild(div);
@@ -25655,10 +26382,11 @@ function createLobbyDebugOverlay() {
       "__useThreeLobby \u2192 " + (typeof window.__useThreeLobby !== "undefined" ? window.__useThreeLobby : "(unset)"),
       "asset base \u2192 " + getBundleScriptBaseUrl(),
       "GLB \u2192 " + LOBBY_MODEL_PATH,
-      "\uD6C4\uCC98\uB9AC \u2192 " + LOBBY_PROCESSING,
+      "\uD6C4\uCC98\uB9AC \u2192 " + effectiveLobbyProcessing() + " (?lobbyFull=1=full, \uAE30\uBCF8 minimal)",
       "\uB9E4\uCE6D \uB370\uC2A4\uD06C \uC218 \u2192 " + (typeof window.__lobbyDeskCount !== "undefined" ? window.__lobbyDeskCount : "(\uB85C\uB4DC \uC804)"),
       "",
-      "2.5D\uB9CC: ?mobileLobby=1 (\uAE30\uBCF8\uC740 \uD56D\uC0C1 3D)"
+      "2.5D\uB9CC: ?mobileLobby=1 (\uAE30\uBCF8\uC740 \uD56D\uC0C1 3D)",
+      "\uC9C4\uC785 \uCE74\uBA54\uB77C: \uCF58\uC194 __saveLobbyEntry() / __clearLobbyEntry() / URL ?clearLobbyEntry=1"
     ];
     div.textContent = lines.join("\n");
   };
@@ -25667,7 +26395,7 @@ function createLobbyDebugOverlay() {
 }
 function lobbyLoadErrorBlendFile() {
   showLobbyLoadError(
-    '<p>\uC774 \uD30C\uC77C\uC740 <strong>Blender \uC6D0\uBCF8(.blend)</strong>\uC785\uB2C8\uB2E4. \uC6F9\uC5D0\uC11C\uB294 <strong>glTF 2.0 \uBC14\uC774\uB108\uB9AC(.glb)</strong>\uB9CC \uBD88\uB7EC\uC62C \uC218 \uC788\uC2B5\uB2C8\uB2E4.</p><p style="opacity:.85;font-size:13px;margin-top:12px;text-align:left;max-width:520px;margin-left:auto;margin-right:auto">Blender \uBA54\uB274\uC5D0\uC11C <strong>\uD30C\uC77C \u2192 \uB0B4\uBCF4\uB0B4\uAE30 \u2192 glTF 2.0 (.glb)</strong>\uB85C \uB0B4\uBCF4\uB0B8 \uB4A4, \uADF8 \uD30C\uC77C\uC744 <code style="font-size:12px">netlify/assets/nurion_lobby.glb</code> \uC704\uCE58\uC5D0 \uB450\uACE0 <code style="font-size:12px">npm run build:netlify</code> \uD6C4 \uB2E4\uC2DC \uBC30\uD3EC\uD558\uC138\uC694. <strong>.blend</strong>\uB97C \uBCF5\uC0AC\uD55C \uB4A4 \uD655\uC7A5\uC790\uB9CC <code>.glb</code>\uB85C \uBC14\uAFB8\uBA74 \uB3D9\uC791\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.</p>'
+    '<p>\uC774 \uD30C\uC77C\uC740 <strong>Blender \uC6D0\uBCF8(.blend)</strong>\uC785\uB2C8\uB2E4. \uC6F9\uC5D0\uC11C\uB294 <strong>glTF 2.0 \uBC14\uC774\uB108\uB9AC(.glb)</strong>\uB9CC \uBD88\uB7EC\uC62C \uC218 \uC788\uC2B5\uB2C8\uB2E4.</p><p style="opacity:.85;font-size:13px;margin-top:12px;text-align:left;max-width:520px;margin-left:auto;margin-right:auto">Blender \uBA54\uB274\uC5D0\uC11C <strong>\uD30C\uC77C \u2192 \uB0B4\uBCF4\uB0B4\uAE30 \u2192 glTF 2.0 (.glb)</strong>\uB85C \uB0B4\uBCF4\uB0B8 \uB4A4, \uADF8 \uD30C\uC77C\uC744 <code style="font-size:12px">netlify/assets/' + LOBBY_GLB_FILENAME + '</code> \uC704\uCE58\uC5D0 \uB450\uACE0 <code style="font-size:12px">npm run build:netlify</code> \uD6C4 \uB2E4\uC2DC \uBC30\uD3EC\uD558\uC138\uC694. <strong>.blend</strong>\uB97C \uBCF5\uC0AC\uD55C \uB4A4 \uD655\uC7A5\uC790\uB9CC <code>.glb</code>\uB85C \uBC14\uAFB8\uBA74 \uB3D9\uC791\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.</p>'
   );
 }
 function initThree() {
@@ -25705,11 +26433,21 @@ function initThree() {
   controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.05;
-  controls.minDistance = 8;
-  controls.maxDistance = 50;
-  controls.maxPolarAngle = Math.PI / 2 - 0.05;
-  controls.minPolarAngle = 0.1;
+  controls.minDistance = 4;
+  controls.maxDistance = 36;
+  controls.maxPolarAngle = Math.PI / 2 - 0.08;
+  controls.minPolarAngle = 0.15;
   controls.target.set(0, 2, 0);
+  maybeClearLobbyEntryFromUrl();
+  renderer.domElement.addEventListener("pointerdown", pingIdleRecoveryUserActivity);
+  renderer.domElement.addEventListener(
+    "pointermove",
+    (e) => {
+      if (e.buttons !== 0) pingIdleRecoveryUserActivity();
+    },
+    { passive: true }
+  );
+  renderer.domElement.addEventListener("wheel", pingIdleRecoveryUserActivity, { passive: true });
   scene.add(new AmbientLight(4210816, 0.5));
   const dir = new DirectionalLight(16777215, 0.8);
   dir.position.set(15, 25, 15);
@@ -25770,23 +26508,23 @@ function initThree() {
             sizeX: _fpSize.x,
             sizeY: _fpSize.y,
             sizeZ: _fpSize.z,
-            processing: LOBBY_PROCESSING,
+            processing: effectiveLobbyProcessing(),
             url: LOBBY_MODEL_PATH
           };
         } catch (_) {
         }
         console.info(
-          "[LOBBY] GLB \uC9C0\uBB38(\uD6C4\uCC98\uB9AC \uC804): mesh=" + _fpMesh + " | \uC6D4\uB4DC \uBC15\uC2A4 \uD06C\uAE30\u2248" + _fpSize.x.toFixed(2) + "\xD7" + _fpSize.y.toFixed(2) + "\xD7" + _fpSize.z.toFixed(2) + " | \uBAA8\uB4DC=" + LOBBY_PROCESSING
+          "[LOBBY] GLB \uC9C0\uBB38(\uD6C4\uCC98\uB9AC \uC804): mesh=" + _fpMesh + " | \uC6D4\uB4DC \uBC15\uC2A4 \uD06C\uAE30\u2248" + _fpSize.x.toFixed(2) + "\xD7" + _fpSize.y.toFixed(2) + "\xD7" + _fpSize.z.toFixed(2) + " | \uBAA8\uB4DC=" + effectiveLobbyProcessing()
         );
         console.info(
-          "[LOBBY] GLB \uD30C\uC77C\uC744 \uBC14\uAFE8\uB294\uB370 \uC774 \uC9C0\uBB38 \uC22B\uC790\uAC00 \uADF8\uB300\uB85C\uBA74 \u2192 \uB2E4\uB978 \uACBD\uB85C\uC758 \uD30C\uC77C\uC744 \uBCF4\uAC70\uB098 \uCE90\uC2DC\uC785\uB2C8\uB2E4. \uC22B\uC790\uAC00 \uBC14\uB00C\uB294\uB370 \uD654\uBA74\uB9CC \uAC19\uC73C\uBA74 \u2192 full \uBAA8\uB4DC \uD6C4\uCC98\uB9AC\uAC00 \uC52C\uC744 \uB36E\uC5B4\uC4F4 \uAC83\uC77C \uC218 \uC788\uC2B5\uB2C8\uB2E4(\uC544\uB798 minimal \uC548\uB0B4)."
+          "[LOBBY] GLB \uD30C\uC77C\uC744 \uBC14\uAFE8\uB294\uB370 \uC774 \uC9C0\uBB38 \uC22B\uC790\uAC00 \uADF8\uB300\uB85C\uBA74 \u2192 \uB2E4\uB978 \uACBD\uB85C\uC758 \uD30C\uC77C\uC774\uAC70\uB098 \uCE90\uC2DC\uC785\uB2C8\uB2E4. \uD654\uBA74\uB9CC \uC774\uC0C1\uD558\uBA74 ?lobbyFull=1(full)\uC774 \uBA54\uC2DC\uB97C \uB9CE\uC774 \uC9C0\uC6E0\uC744 \uC218 \uC788\uC74C \u2192 \uAE30\uBCF8 minimal\uB85C \uBE44\uAD50."
         );
-        if (LOBBY_PROCESSING === "full") {
+        if (effectiveLobbyProcessing() === "full") {
           console.info(
-            '[LOBBY] full: \uB370\uC2A4\uD06C \uD589\uC131\xB7\uD37C\uC9C0\xB7\uBC14\uB2E5 \uC601\uC0C1 \uB4F1\uC73C\uB85C \uD3B8\uC9D1\uD55C GLB\uC640 \uD654\uBA74\uC774 \uB9CE\uC774 \uB2EC\uB77C\uC9C8 \uC218 \uC788\uC2B5\uB2C8\uB2E4. \uC6D0\uBCF8\uB9CC \uD655\uC778\uD558\uB824\uBA74 app.js \uC5D0\uC11C LOBBY_PROCESSING \uC744 "minimal" \uB85C \uBC14\uAFBC \uB4A4 npm run build:netlify'
+            "[LOBBY] full: Plane \uC774\uB984\xB7\uD37C\uC9C0\uAC00 \uC0C8 GLB\uC640 \uC548 \uB9DE\uC73C\uBA74 \uB85C\uBE44\uAC00 \uAC70\uC758 \uC0AC\uB77C\uC9C8 \uC218 \uC788\uC74C. \uBB38\uC81C \uC2DC ?lobbyFull \uC81C\uAC70(\uAE30\uBCF8 minimal) \uB610\uB294 \uC804\uCCB4 \uC52C glb \uC0AC\uC6A9"
           );
         }
-        if (LOBBY_PROCESSING === "minimal") {
+        if (effectiveLobbyProcessing() === "minimal") {
           applyMinimalLobbyPostProcess(lobbyModel);
           return;
         }
@@ -25922,7 +26660,6 @@ GLB Materials \uCD1D ${json.materials.length}\uAC1C:`);
             }
             console.log("=== GLB \uC815\uBCF4 \uBD84\uC11D \uC644\uB8CC ===\n");
             const namesList = [];
-            const toRemove = [];
             let floorMaterialColor = null;
             const blueFloorMeshes = [];
             lobbyModel.traverse((child) => {
@@ -25932,6 +26669,7 @@ GLB Materials \uCD1D ${json.materials.length}\uAC1C:`);
                 if (mats.length > 0 && mats[0].color) floorMaterialColor = mats[0].color.clone();
               }
             });
+            removeLobbyPeopleAndTextMeshes(lobbyModel);
             lobbyModel.traverse((child) => {
               if (DEBUG_LOG_GLB_NAMES) namesList.push(child.name || "(unnamed)");
               if (child.isMesh) child.castShadow = child.receiveShadow = true;
@@ -25939,19 +26677,13 @@ GLB Materials \uCD1D ${json.materials.length}\uAC1C:`);
               const mats = child.material ? Array.isArray(child.material) ? child.material : [child.material] : [];
               const matName = mats.map((m) => m && m.name || "").join(" ").toLowerCase();
               const rawName = child.name || "";
-              const isText = HIDE_TEXT_PATTERN.test(rawName) || n.includes("text");
               const isPageText = HIDE_PAGE_TEXT_PATTERN.test(rawName);
-              const isPeople = HIDE_PEOPLE_PATTERN.test(n) || HIDE_PEOPLE_PATTERN.test(matName) || HIDE_OBJECT_NAMES_EXACT.includes(rawName);
               const isFloor = n.includes("floor");
               const isFloorLineMat = HIDE_FLOOR_LINE_MAT_PATTERN.test(matName);
               const isBlue = rawName.includes("n_419") || n.includes("blue") || matName.includes("blue_light") || mats.some((m) => m && m.color && m.color.b > m.color.r && m.color.b > m.color.g && m.color.b > 0.2);
-              if (isText || isPeople) toRemove.push(child);
               if (isPageText) child.visible = false;
               if (isFloorLineMat && !isFloor) child.visible = false;
               if (isBlue && !isFloor) blueFloorMeshes.push(child);
-            });
-            toRemove.forEach((obj) => {
-              if (obj.parent) obj.parent.remove(obj);
             });
             const arrowPlaneNames = [];
             DESK_ARROW_PLANES.forEach((group) => {
@@ -26025,8 +26757,17 @@ GLB Materials \uCD1D ${json.materials.length}\uAC1C:`);
                 mesh.material = newMats.length === 1 ? newMats[0] : newMats;
               });
             }
+            if (!lobbyModel.parent) {
+              scene.add(lobbyModel);
+              expandLobbyBoundsFromModel(lobbyModel);
+              frameLobbyCameraToModel(lobbyModel);
+              applySavedLobbyEntryIfAny();
+              captureLobbyRecoveryCamera();
+              console.info("[LOBBY] \uBAA8\uB378\uC744 \uC52C\uC5D0 \uBA3C\uC800 \uCD94\uAC00\uD568(\uB370\uC2A4\uD06C \uD14D\uC2A4\uCC98\xB7\uD6C4\uCC98\uB9AC\uB294 \uACC4\uC18D \uC9C4\uD589)");
+            }
             await applyDeskLabelsAsync(lobbyModel);
             removeFloorObstacleMeshes(lobbyModel);
+            applyMonitorWallCubeDeptLabels(lobbyModel);
             purgeHologramLikeObjects(lobbyModel);
             try {
               purgeAdditionalPlanes(lobbyModel);
@@ -26156,7 +26897,7 @@ GLB Materials \uCD1D ${json.materials.length}\uAC1C:`);
             } catch (e) {
               console.warn("runPurgesRepeatedly \uC2E4\uD328:", e);
             }
-            scene.add(lobbyModel);
+            if (!lobbyModel.parent) scene.add(lobbyModel);
             showGlbVerifyBannerIfRequested();
           } catch (fullErr) {
             console.error("[LOBBY] full \uD6C4\uCC98\uB9AC \uC911 \uC624\uB958 \u2014 minimal \uBAA8\uB4DC\uB85C \uD45C\uC2DC\uD569\uB2C8\uB2E4:", fullErr);
@@ -26216,6 +26957,11 @@ function onCanvasClick(event) {
     let deskMesh = null;
     let hitPoint = null;
     for (const h of hits) {
+      const slot = findPlanetClickSlotFromObject(h.object);
+      if (slot) {
+        openDeptForPlanetSlot(slot, h.point?.clone?.() || null);
+        return;
+      }
       const d = findDeskFromObject(h.object);
       if (d) {
         deskMesh = d;
@@ -26270,6 +27016,11 @@ function onCanvasTouch(event) {
     let deskMesh = null;
     let hitPoint = null;
     for (const h of hits) {
+      const slot = findPlanetClickSlotFromObject(h.object);
+      if (slot) {
+        openDeptForPlanetSlot(slot, h.point?.clone?.() || null);
+        return;
+      }
       const d = findDeskFromObject(h.object);
       if (d) {
         deskMesh = d;
@@ -26320,6 +27071,18 @@ function clampTargetAndCamera() {
   p.y = Math.max(LOBBY_BOUNDS.minY, Math.min(LOBBY_BOUNDS.maxY, p.y));
   p.z = Math.max(LOBBY_BOUNDS.minZ, Math.min(LOBBY_BOUNDS.maxZ, p.z));
 }
+function minDistToLobbyBoundsSurface(v) {
+  const dx = Math.min(v.x - LOBBY_BOUNDS.minX, LOBBY_BOUNDS.maxX - v.x);
+  const dy = Math.min(v.y - LOBBY_BOUNDS.minY, LOBBY_BOUNDS.maxY - v.y);
+  const dz = Math.min(v.z - LOBBY_BOUNDS.minZ, LOBBY_BOUNDS.maxZ - v.z);
+  return Math.min(dx, dy, dz);
+}
+function isLobbyCameraNearBoundsEdge() {
+  if (!camera || !controls) return false;
+  const dCam = minDistToLobbyBoundsSurface(camera.position);
+  const dTgt = minDistToLobbyBoundsSurface(controls.target);
+  return dCam < 0.22 || dTgt < 0.35;
+}
 function updateDeskCylinderLabelFacing() {
   if (!camera || deskCylLabels.length === 0) return;
   const cylPos = new Vector3();
@@ -26345,6 +27108,9 @@ function animate() {
       isMovingToTarget = false;
       camera.position.copy(targetPosition);
       controls.target.copy(targetLookAt);
+      clampTargetAndCamera();
+      controls.update();
+      pingIdleRecoveryUserActivity();
     } else {
       camera.position.lerp(targetPosition, MOVE_SPEED);
       controls.target.lerp(targetLookAt, MOVE_SPEED);
@@ -26353,8 +27119,20 @@ function animate() {
   } else {
     controls.update();
     clampTargetAndCamera();
+    let skipIdleRecovery = false;
+    try {
+      if (window.__isMobile) skipIdleRecovery = true;
+    } catch (_) {
+    }
+    if (!skipIdleRecovery && recoveryCameraCaptured && lastLobbyInputAt > 0 && performance.now() >= suppressIdleRecoveryResetUntil) {
+      const needMs = isLobbyCameraNearBoundsEdge() ? EDGE_RECOVERY_MS : IDLE_RECOVERY_MS;
+      if (performance.now() - lastLobbyInputAt >= needMs) {
+        applyIdleRecoveryToCamera();
+      }
+    }
   }
   updateDeskCylinderLabelFacing();
+  updateWallDeptExtrusionLabels();
   renderer.render(scene, camera);
 }
 initIntro();

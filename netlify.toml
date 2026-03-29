@@ -15,3 +15,9 @@
   from = "/*"
   to = "/index.html"
   status = 200
+
+# GLB 교체 후에도 CDN/브라우저가 옛 URL을 오래 붙잡지 않도록 (?v= 와 함께 사용)
+[[headers]]
+  for = "/assets/*.glb"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"

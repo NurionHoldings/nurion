@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>누리온홀딩스 모바일 로비</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #05070b;
+      font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      color: #fff;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* 설계 이미지 1024×1536(2:3) — 핫스팟 % 좌표와 정합. 9:16 강제 시 cover로 잘리며 좌표가 어긋날 수 있음 */
+    .mobile-lobby {
+      position: relative;
+      width: min(100vw, 480px);
+      aspect-ratio: 1024 / 1536;
+      overflow: hidden;
+      background: #000;
+    }
+
+    .intro-video,
+    .lobby-overlay {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .intro-video {
+      object-fit: cover;
+      display: block;
+    }
+
+    .lobby-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+
+    .intro-video {
+      z-index: 6;
+    }
+
+    .lobby-overlay {
+      z-index: 5;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .hotspot {
+      position: absolute;
+      display: block;
+      border-radius: 18px;
+      background: rgba(90, 220, 255, 0.02);
+      border: 1px solid rgba(120, 255, 255, 0.10);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.04) inset,
+        0 0 18px rgba(70, 220, 255, 0.08);
+      text-indent: -9999px;
+      overflow: hidden;
+      transition: box-shadow 0.18s ease, background 0.18s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .hotspot:hover,
+    .hotspot:active {
+      background: rgba(90, 220, 255, 0.08);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.08) inset,
+        0 0 24px rgba(70, 220, 255, 0.18);
+    }
+
+    .hotspot:focus-visible {
+      outline: 2px solid rgba(255,255,255,0.9);
+      outline-offset: 2px;
+    }
+
+    /* 1024×1536 이미지 기준 — 아이콘+하단 텍스트 포함 영역 */
+    .btn-consulting {
+      left: 4.10%;
+      top: 48.31%;
+      width: 15.62%;
+      height: 14.84%;
+    }
+
+    .btn-news {
+      left: 23.24%;
+      top: 50.52%;
+      width: 17.38%;
+      height: 16.80%;
+    }
+
+    .btn-edocs {
+      left: 43.26%;
+      top: 50.52%;
+      width: 16.50%;
+      height: 16.80%;
+    }
+
+    .btn-software {
+      left: 61.72%;
+      top: 50.65%;
+      width: 16.60%;
+      height: 16.28%;
+    }
+
+    .btn-solar {
+      left: 79.98%;
+      top: 48.31%;
+      width: 17.19%;
+      height: 14.91%;
+    }
+
+    .skip-wrap {
+      position: absolute;
+      top: max(12px, env(safe-area-inset-top));
+      right: 12px;
+      z-index: 20;
+      display: flex;
+      gap: 8px;
+    }
+
+    .skip-btn {
+      border: 0;
+      cursor: pointer;
+      min-height: 38px;
+      padding: 0 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      background: rgba(10, 15, 25, 0.52);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.22);
+    }
+
+    .brand-tip {
+      position: absolute;
+      left: 50%;
+      bottom: max(12px, env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      z-index: 10;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(7, 11, 20, 0.42);
+      backdrop-filter: blur(8px);
+      font-size: 12px;
+      color: rgba(255,255,255,0.86);
+      letter-spacing: 0.01em;
+    }
+  </style>
+</head>
+<body>
+  <!-- 진입: PC(index + app.js)와 동일한 assets/intro.mp4. 모바일 전용 2.5D 로비 영상(lobby_2d5 등)은 재생하지 않고 PNG로 바로 이어짐 -->
+  <section class="mobile-lobby">
+    <div class="skip-wrap">
+      <button type="button" class="skip-btn" id="skipIntro">건너뛰기</button>
+    </div>
+
+    <video
+      id="introVideo"
+      class="intro-video"
+      autoplay
+      muted
+      playsinline
+      preload="auto"
+    >
+      <source src="assets/intro.mp4" type="video/mp4" />
+    </video>
+
+    <div id="lobbyOverlay" class="lobby-overlay hidden">
+      <img
+        src="images/mobile-lobby-final.png"
+        alt="누리온홀딩스 모바일 로비"
+        class="lobby-bg"
+      />
+
+      <a href="dept/consulting.html" class="hotspot btn-consulting" aria-label="기업컨설팅으로 이동">기업컨설팅</a>
+      <a href="dept/news.html" class="hotspot btn-news" aria-label="인터넷신문사로 이동">인터넷신문사</a>
+      <a href="dept/edocs.html" class="hotspot btn-edocs" aria-label="창고형 전자문서로 이동">창고형 전자문서</a>
+      <a href="dept/software.html" class="hotspot btn-software" aria-label="응용 소프트웨어 개발로 이동">응용 소프트웨어 개발</a>
+      <a href="dept/solar.html" class="hotspot btn-solar" aria-label="태양광 사업으로 이동">태양광 사업</a>
+
+      <div class="brand-tip">모바일 전용 2.5D 로비</div>
+    </div>
+  </section>
+
+  <script>
+    const introVideo = document.getElementById('introVideo');
+    const lobbyOverlay = document.getElementById('lobbyOverlay');
+    const skipIntro = document.getElementById('skipIntro');
+
+    function showLobby() {
+      introVideo.pause();
+      introVideo.classList.add('hidden');
+      lobbyOverlay.classList.remove('hidden');
+      skipIntro.classList.add('hidden');
+    }
+
+    introVideo.addEventListener('ended', showLobby);
+    introVideo.addEventListener('error', showLobby);
+    skipIntro.addEventListener('click', showLobby);
+
+    window.addEventListener('load', () => {
+      const playAttempt = introVideo.play();
+      if (playAttempt && typeof playAttempt.catch === 'function') {
+        playAttempt.catch(() => {
+          showLobby();
+        });
+      }
+    });
+  </script>
+</body>
+</html>

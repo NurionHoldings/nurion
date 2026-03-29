@@ -3,9 +3,10 @@
   "name": "3d_lobby",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "netlify/app.js",
   "scripts": {
     "build:netlify": "node scripts/verify-netlify-assets.mjs && esbuild netlify/app.js --bundle --outfile=netlify/bundle.js --format=esm --platform=browser",
+    "sync:glb": "node scripts/sync-lobby-glb-from-root.mjs",
     "watch:netlify": "esbuild netlify/app.js --bundle --outfile=netlify/bundle.js --format=esm --platform=browser --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

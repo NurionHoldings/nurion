@@ -1,0 +1,243 @@
+/**
+ * 사업부 상세 페이지 공통: 행성 대표색 배경, 가독형 타이포, 한국어 줄바꿈, 모바일 반응형
+ * 각 HTML: <html lang="ko" data-dept="consulting|news|edocs|software|solar|resources">
+ */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+@import url("https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600;700&display=swap");
+
+html[data-dept="consulting"] {
+  --accent: #00b3ff;
+  --deptGlow: radial-gradient(900px 520px at 85% 15%, rgba(0, 179, 255, 0.22), transparent 55%),
+    radial-gradient(700px 420px at 10% 25%, rgba(255, 255, 255, 0.08), transparent 55%);
+}
+html[data-dept="news"] {
+  --accent: #ff6a00;
+  --deptGlow: radial-gradient(900px 520px at 85% 15%, rgba(255, 106, 0, 0.22), transparent 55%),
+    radial-gradient(700px 420px at 10% 25%, rgba(255, 255, 255, 0.08), transparent 55%);
+}
+html[data-dept="edocs"] {
+  --accent: #8b5cff;
+  --deptGlow: radial-gradient(900px 520px at 85% 15%, rgba(139, 92, 255, 0.22), transparent 55%),
+    radial-gradient(700px 420px at 10% 25%, rgba(255, 255, 255, 0.08), transparent 55%);
+}
+html[data-dept="software"] {
+  --accent: #00d28a;
+  --deptGlow: radial-gradient(900px 520px at 85% 15%, rgba(0, 210, 138, 0.22), transparent 55%),
+    radial-gradient(700px 420px at 10% 25%, rgba(255, 255, 255, 0.08), transparent 55%);
+}
+html[data-dept="solar"] {
+  --accent: #ff9f1a;
+  --deptGlow: radial-gradient(900px 520px at 85% 15%, rgba(255, 159, 26, 0.22), transparent 55%),
+    radial-gradient(700px 420px at 10% 25%, rgba(255, 255, 255, 0.08), transparent 55%);
+}
+html[data-dept="resources"] {
+  --accent: #7dd3fc;
+  --deptGlow: radial-gradient(900px 520px at 85% 15%, rgba(125, 211, 252, 0.18), transparent 55%),
+    radial-gradient(700px 420px at 10% 25%, rgba(134, 239, 172, 0.08), transparent 55%);
+}
+
+html[data-dept] body {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, -apple-system, "Segoe UI", sans-serif;
+  background:
+    radial-gradient(ellipse 120% 70% at 50% -15%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 52%),
+    var(--deptGlow),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent) 10%, #03060c) 0%,
+      #050a12 38%,
+      #0a101c 100%
+    );
+  color: #f0f4ff;
+}
+
+html[data-dept] .hero h1,
+html[data-dept] .section h2,
+html[data-dept] .card h3,
+html[data-dept] .quick h2,
+html[data-dept] .metricLabel,
+html[data-dept] .caseTitle,
+html[data-dept] .faq summary,
+html[data-dept] .deliverCard h3,
+html[data-dept] .stepTitle,
+html[data-dept] .highlightPanel h3,
+html[data-dept] .hero-copy h1,
+html[data-dept] .section-head h2,
+html[data-dept] .hero-side h2 {
+  font-family: "Noto Serif KR", "Pretendard", serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #f8faff;
+}
+
+html[data-dept] main p,
+html[data-dept] .hero-copy p,
+html[data-dept] .section-head p {
+  font-weight: 600;
+  line-height: 1.82;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+html[data-dept] .hero h1 {
+  line-height: 1.38;
+}
+
+html[data-dept] p,
+html[data-dept] .sectionLead,
+html[data-dept] .card p,
+html[data-dept] .qDesc,
+html[data-dept] .metricDesc,
+html[data-dept] .caseText,
+html[data-dept] .stepDesc,
+html[data-dept] .faq p,
+html[data-dept] li,
+html[data-dept] .infoItem,
+html[data-dept] .deliverCard p,
+html[data-dept] .contactMini,
+html[data-dept] .note .small {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.93);
+  line-height: 1.82;
+}
+
+html[data-dept] .sectionLead {
+  font-size: 1.02rem;
+}
+
+html[data-dept] .hero p {
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.82;
+}
+
+html[data-dept] .muted,
+html[data-dept] .small {
+  font-weight: 550;
+}
+
+html[data-dept] .caseCard:before {
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--accent) 24%, transparent),
+    transparent 65%
+  );
+}
+
+html[data-dept] .board-post__body h3,
+html[data-dept] #resourceGrid .card h3 {
+  font-family: "Noto Serif KR", "Pretendard", serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #f8faff;
+}
+
+html[data-dept] .board-lead,
+html[data-dept] #resourceGrid .card p {
+  font-weight: 600;
+  line-height: 1.85;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+html[data-dept] .topbar {
+  border-color: color-mix(in srgb, var(--accent) 35%, rgba(255, 255, 255, 0.1));
+  background: color-mix(in srgb, var(--accent) 8%, rgba(8, 12, 20, 0.88));
+}
+
+html[data-dept] .btn.primary {
+  font-weight: 700;
+}
+
+/* 모바일: 여백·타이포·한 줄 폭 */
+@media (max-width: 900px) {
+  html[data-dept] .wrap {
+    width: calc(100vw - 28px);
+    margin: 14px auto 52px;
+  }
+
+  html[data-dept] .topbar {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px 14px;
+    top: 8px;
+  }
+
+  html[data-dept] .actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  html[data-dept] .hero h1 {
+    font-size: clamp(1.35rem, 5vw, 1.75rem);
+  }
+
+  html[data-dept] .section h2 {
+    font-size: 1.2rem;
+  }
+
+  html[data-dept] .hero p,
+  html[data-dept] .sectionLead {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  html[data-dept] .wrap {
+    width: calc(100vw - 20px);
+    margin: 10px auto 44px;
+  }
+
+  html[data-dept] .topbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  html[data-dept] .brand .title {
+    font-size: 0.95rem;
+  }
+
+  html[data-dept] .btn {
+    padding: 9px 11px;
+    font-size: 13px;
+  }
+
+  html[data-dept] .hero {
+    padding: 15px 14px;
+  }
+
+  html[data-dept] .section {
+    padding: 15px 14px;
+  }
+
+  html[data-dept] .quickGrid {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-dept] .metricGrid {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-dept] .hero h1 {
+    font-size: 1.38rem;
+    line-height: 1.42;
+  }
+
+  html[data-dept] p,
+  html[data-dept] .sectionLead,
+  html[data-dept] .card p {
+    line-height: 1.88;
+  }
+}
+
+@media (max-width: 400px) {
+  html[data-dept] .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  html[data-dept] .actions .btn {
+    text-align: center;
+  }
+}

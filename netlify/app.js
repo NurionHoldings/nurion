@@ -1,6 +1,6 @@
 /**
  * NURION 3D 로비
- * - 인트로 후 LOBBY_MODEL_PATH(GLB) 로드. LOBBY_PROCESSING: minimal(기본)=원본만, full=기존 후처리 전체
+ * - 인트로 후 LOBBY_MODEL_PATH(GLB) 로드. 기본 minimal(원본만). full=데스크 행성 등(이름이 예전 로비와 맞을 때만).
  * - 브라우저가 읽는 건 netlify/bundle.js 뿐(esbuild). 이 파일만 고치면 반영 안 됨 → npm run build:netlify 또는 watch:netlify
  */
 
@@ -10,7 +10,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 
 /** app.js 수정 후 bundle 재생성했는지 확인용(콘솔·?lobbydebug=1 패널) */
-const LOBBY_BUILD_STAMP = "20250328j";
+const LOBBY_BUILD_STAMP = "20260329z9";
 try {
   window.__LOBBY_BUILD_STAMP = LOBBY_BUILD_STAMP;
 } catch (_) {}
@@ -21,15 +21,23 @@ const HIDE_PEOPLE_PATTERN = /armature|human|person|character|body|man|woman|peop
 const HIDE_TEXT_PATTERN = /^text\.|text$/i;
 const HIDE_FLOOR_LINE_MAT_PATTERN = /road_line|line_neon/;
 const DEBUG_LOG_GLB_NAMES = false;
+/** 이름이 정확히 일치하면 메시 제거(예: GLB에 남은 오브젝트명을 문자열로 추가) */
 const HIDE_OBJECT_NAMES_EXACT = [];
 
-/** 바닥 면 위에 올려 둔 Blender 기본 Cube/Circle 등(장애물) — 이름·높이로만 제거, 데스크/바닥은 제외 */
-const FLOOR_OBSTACLE_NAME_PATTERN = /^(?:Cube|Circle)(?:\.\d+)?$/i;
-const FLOOR_OBSTACLE_MAX_CENTER_Y = 2.25;
-const FLOOR_OBSTACLE_MAX_TOP_Y = 3.35;
+/** 바닥 위 Blender 기본체(Cube/Cylinder 등) — 이름·높이로 제거. 패턴에 없으면 FLOOR_OBSTACLE_NAMES_EXACT */
+const FLOOR_OBSTACLE_NAME_PATTERN = /^(?:Cube|Circle|Cylinder|Sphere|Cone)(?:\.\d+)?$/i;
+const FLOOR_OBSTACLE_NAMES_EXACT = [];
+/** 바닥면(floorRefY) 위로 중심이 이 정도 넘으면 제외(조명·상부 메시 방지) */
+const FLOOR_OBSTACLE_MAX_CENTER_ABOVE_FLOOR = 2.35;
+/** 바닥면 기준 꼭대기가 이 높이를 넘으면 제외(기둥 등) */
+const FLOOR_OBSTACLE_MAX_TOP_ABOVE_FLOOR = 3.45;
 const FLOOR_OBSTACLE_MAX_DIM = 22;
-/** 바닥 높이가 Y=0이 아닐 수 있어, 아래면 조건은 보조용(너무 막히면 상수를 크게) */
-const FLOOR_OBSTACLE_MAX_BOTTOM_Y = 12;
+/** 메시 하단이 바닥면에서 이만큼 위에 있으면 ‘바닥 위’가 아님(파란 매트·소형 단차 포함) */
+const FLOOR_OBSTACLE_MAX_ONFLOOR_GAP = 1.35;
+/** 실내 박스(LOBBY_BOUNDS) XZ 중심 근처 — 전역 bbox 중심과 어긋나는 로비 중앙 장애물용 */
+const FLOOR_CENTER_OBSTACLE_RADIUS_FRAC = 0.5;
+/** 아주 작은 중앙 장애물(키오스크 등) 추가 반경 비율 */
+const FLOOR_TINY_OBSTACLE_RADIUS_FRAC = 0.38;
 
 /**
  * 에셋·dept HTML 의 기준 URL. 우선순위: meta[name=lobby-asset-base] → bundle.js 위치 → document.baseURI
@@ -71,24 +79,37 @@ const LOBBY_25D_VIDEO = assetUrl("assets/lobby_2d5.mp4");
  * GLB 파일만 덮어썼는데 화면이 예전 그대로면 대부분 브라우저 캐시 — 아래 숫자만 1 올리고 bundle 재빌드.
  * @type {string}
  */
-const LOBBY_GLB_CACHE_BUST = "3";
+const LOBBY_GLB_CACHE_BUST = "8";
+
+/** netlify/assets/ 안의 로비 GLB 파일명. 부분 내보내기(용량 매우 작음)는 씬이 거의 비어 보일 수 있음 → 전체 씬 glb 권장. */
+const LOBBY_GLB_FILENAME = "nurion_lobby.glb";
 
 /**
- * 3D 로비 GLB — 배포 시 netlify/assets/nurion_lobby.glb (?v= 캐시 무력화).
+ * 3D 로비 GLB — 배포 시 netlify/assets/{LOBBY_GLB_FILENAME} (?v= 캐시 무력화).
  * @type {string}
  */
 const LOBBY_MODEL_PATH = (() => {
-  const u = new URL(assetUrl("assets/nurion_lobby.glb"));
+  const u = new URL(assetUrl("assets/" + LOBBY_GLB_FILENAME));
   u.searchParams.set("v", LOBBY_GLB_CACHE_BUST);
   return u.href;
 })();
 
 /**
- * minimal: GLB를 씬에만 올림(그림자). 데스크 치환·퍼지·바닥 영상 없음 → 새 모델 검증·교체용.
- * full: 기존 전체 후처리(데스크 라벨, 바닥 동영상, Plane 제거 등).
+ * minimal: GLB를 씬에만 올림(그림자). 새 내보내기·이름이 예전과 다를 때 기본 권장.
+ * full: 데스크 행성·Plane 제거·퍼지 등 — 원본 로비(Plane035 등 이름)와 맞을 때만. 아니면 메시 대부분이 지워져 모니터만 남을 수 있음.
  * @type {'minimal' | 'full'}
  */
-const LOBBY_PROCESSING = "full";
+const LOBBY_PROCESSING = "minimal";
+
+/** URL: ?lobbyMinimal=1 → minimal | ?lobbyFull=1 → full (행성 데스크·바닥영상 등). 기본은 LOBBY_PROCESSING. */
+function effectiveLobbyProcessing() {
+  try {
+    const q = location.search || "";
+    if (/[?&]lobbyMinimal=1(?:&|$)/i.test(q)) return "minimal";
+    if (/[?&]lobbyFull=1(?:&|$)/i.test(q)) return "full";
+  } catch (_) {}
+  return LOBBY_PROCESSING;
+}
 
 /**
  * 모바일 전용(2.5D 로비만, WebGL 생략) 경로. true 이면 initThree 가 return · 인트로 후 캔버스 숨김.
@@ -116,8 +137,25 @@ const DESK_LABELS = [
   // 4. Plane054
   { name: 'Plane054', label: '응용 소프트웨어 개발', planetTexture: assetUrl('assets/textures/planets/saturn_ring.png'), cameraPos: {x: 2, y: 3.5, z: -6}, cameraTarget: {x: 1, y: 2, z: -3} },
   // 5. Plane061
-  { name: 'Plane061', label: '스마트 City', planetTexture: assetUrl('assets/textures/planets/venus.png'), cameraPos: {x: -4, y: 3.5, z: -6}, cameraTarget: {x: -2, y: 2, z: -3} },
+  { name: 'Plane061', label: '태양광 사업', planetTexture: assetUrl('assets/textures/planets/venus.png'), cameraPos: {x: -4, y: 3.5, z: -6}, cameraTarget: {x: -2, y: 2, z: -3} },
 ];
+
+/**
+ * 각 데스크 모니터 앞 벽면 Cube(GLB 이름) — DESK_LABELS 와 같은 순서로 사업부명 라벨 부착.
+ * (monitor_planet1~5 앞 Cube: .023, .027, .028, .029, .032)
+ */
+const MONITOR_WALL_CUBE_MESH_NAMES = [
+  "Cube.023",
+  "Cube.027",
+  "Cube.028",
+  "Cube.029",
+  "Cube.032",
+];
+
+/** 사업부명 돌출 레이어(동일 텍스처 다층) + animate() 에서 펄스·UV 이동 */
+const WALL_DEPT_EXTRUDE_LAYERS = 18;
+const WALL_DEPT_LAYER_STEP = 0.014;
+const wallDeptExtrusionAnimators = [];
 
 console.info(
   "[LOBBY] 에셋 기준:",
@@ -128,8 +166,8 @@ console.info(
   LOBBY_GLB_CACHE_BUST,
   "(바꿀 때마다 +1)",
   "| 후처리:",
-  LOBBY_PROCESSING,
-  "(full=모니터 행성·바닥 처리)"
+  effectiveLobbyProcessing(),
+  "(minimal=원본 | URL ?lobbyFull=1=행성·바닥 등 full)"
 );
 
 const DESK_TO_DEPTKEY = {
@@ -137,7 +175,7 @@ const DESK_TO_DEPTKEY = {
   '인터넷신문사': 'news',
   '창고형 전자문서': 'edocs',
   '응용 소프트웨어 개발': 'software',
-  '스마트 City': 'smartcity',
+  '태양광 사업': 'solar',
 };
 
 const DESK_LINKS = {
@@ -145,7 +183,7 @@ const DESK_LINKS = {
   plane040: assetUrl("dept/news.html"),
   plane047: assetUrl("dept/edocs.html"),
   plane054: assetUrl("dept/software.html"),
-  plane061: assetUrl("dept/smartcity.html"),
+  plane061: assetUrl("dept/solar.html"),
 };
 
 const DEPT_CONTENT = {
@@ -193,15 +231,15 @@ const DEPT_CONTENT = {
       { title: '4) 배포/운영', items: ['CI/CD', 'Netlify/Vercel 배포', '장애 대응 룰', '운영 리포트 자동화'] },
     ]
   },
-  smartcity: {
-    kicker: 'SMART CITY',
-    title: '스마트 City',
-    sub: '도시/단지 단위의 데이터·에너지·안전·편의 서비스를 통합',
+  solar: {
+    kicker: 'SOLAR',
+    title: '태양광사업',
+    sub: '지붕형·영농형·주민참여형·RE100·협동조합 설립까지 통합 지원',
     blocks: [
-      { title: '1) 도시 데이터 플랫폼', items: ['센서/데이터 수집', '대시보드', '알림/이벤트 룰', '데이터 표준화'] },
-      { title: '2) 에너지/전력 연계', items: ['태양광/ESS 모니터링', '피크 절감', '수요예측', '협동조합 모델 확장'] },
-      { title: '3) 안전/시설 관리', items: ['CCTV/출입 연동', '시설 점검 스케줄', '민원 처리 흐름', '장애 대응 매뉴얼'] },
-      { title: '4) 시민/입주자 서비스', items: ['모바일 안내', '예약/결제', '커뮤니티 공지', '개인화 추천'] },
+      { title: '1) 사업 유형·구조', items: ['지붕형·영농형·주차장형', '주민참여형 검토', 'RE100·탄소중립 방향', '부지·건물 특성 정리'] },
+      { title: '2) 협동조합·문서', items: ['정관·총회 기초안', '주민 설명자료', 'PM·협의 문안', '인허가 기초 문서'] },
+      { title: '3) 인허가·운영', items: ['대관·절차 정리', '사업 문서·PM 범위', '실무 협의 동선', '후속 운영 기준'] },
+      { title: '4) 실행·확장', items: ['추진 단계별 검토', '역할 분담', '후속 보완 방향', '운영 정착 지원'] },
     ]
   }
 };
@@ -219,6 +257,302 @@ const DESK_ARROW_PLANES = [
 const HIDE_PAGE_TEXT_PATTERN = /^text\.(00[3-6]|032|0(0[9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-3]))$/i;
 
 const LOBBY_BOUNDS = { minX: -20, maxX: 20, minY: 0, maxY: 20, minZ: -28, maxZ: 28 };
+
+/** GLB에 이 이름의 오브젝트가 있으면 진입 카메라를 여기 기준으로 둠(없으면 자동 박스 방식) */
+const LOBBY_CAMERA_ANCHOR_NAME = "Cube002";
+const LOBBY_CAMERA_ANCHOR_FORWARD_M = 2;
+const LOBBY_CAMERA_ANCHOR_UP_M = 2;
+
+const _floorEstBox = new THREE.Box3();
+const _cubeAnchorBox = new THREE.Box3();
+const _v3AnchorPos = new THREE.Vector3();
+const _v3AnchorFwd = new THREE.Vector3();
+const _anchorQuat = new THREE.Quaternion();
+const _flipLookT = new THREE.Vector3();
+
+/**
+ * 전역 bbox.minY는 지형·기단 때문에 실제 로비 바닥면보다 낮을 수 있음.
+ * 얇은 메시의 world 상단 Y 중 하단 띠에 있는 후보로 바닥면 높이를 추정한다.
+ */
+function estimateLobbyFloorSurfaceY(model, worldBox) {
+  const sy = worldBox.max.y - worldBox.min.y;
+  if (sy < 0.05) return null;
+  const lowBand = worldBox.min.y + sy * 0.28;
+  let best = worldBox.min.y;
+  let found = false;
+  model.updateMatrixWorld(true);
+  model.traverse((o) => {
+    if (!o.isMesh || !o.geometry) return;
+    const g = o.geometry;
+    if (!g.boundingBox) g.computeBoundingBox();
+    _floorEstBox.copy(g.boundingBox).applyMatrix4(o.matrixWorld);
+    const h = _floorEstBox.max.y - _floorEstBox.min.y;
+    const thin = h < Math.max(sy * 0.16, 0.28);
+    if (thin && _floorEstBox.max.y <= lowBand && _floorEstBox.max.y >= worldBox.min.y - 0.05) {
+      best = Math.max(best, _floorEstBox.max.y);
+      found = true;
+    }
+  });
+  return found ? best : null;
+}
+
+/** GLB 외곽 박스에서 안쪽으로 들여 '로비 실내' 이동 범위만 만듭니다. (밖으로 팽창하면 카메라가 외벽 밖으로 나감) */
+function expandLobbyBoundsFromModel(model) {
+  const box = new THREE.Box3().setFromObject(model);
+  if (box.isEmpty()) return;
+  const sx = box.max.x - box.min.x;
+  const sy = box.max.y - box.min.y;
+  const sz = box.max.z - box.min.z;
+  const span = Math.max(sx, sy, sz, 1);
+  const insetH = Math.min(Math.max(0.45, span * 0.07), sx * 0.45, sz * 0.45, 8);
+  LOBBY_BOUNDS.minX = box.min.x + insetH;
+  LOBBY_BOUNDS.maxX = box.max.x - insetH;
+  LOBBY_BOUNDS.minZ = box.min.z + insetH;
+  LOBBY_BOUNDS.maxZ = box.max.z - insetH;
+  // 야외 지면·건물 하부 외곽이 bbox 최하단에 있으면 minY가 실내 바닥보다 낮아져
+  // 카메라가 ‘밖·아래’에서 시작하는 것처럼 보임 → 세로 높이 비율로 하단을 더 들임
+  const insetBottom = Math.min(4.2, Math.max(0.38, sy * 0.075));
+  // 천장·지붕 메시에 가깝지 않게 위쪽을 더 들여 실내 체류 구간을 바닥~중간 높이로
+  const insetTop = Math.min(3.2, Math.max(0.55, sy * 0.14));
+  const meshFloorY = estimateLobbyFloorSurfaceY(model, box);
+  let minY = box.min.y + insetBottom;
+  if (meshFloorY != null && meshFloorY > box.min.y + 0.06) {
+    minY = Math.max(minY, meshFloorY - 0.03);
+  }
+  LOBBY_BOUNDS.minY = minY;
+  LOBBY_BOUNDS.maxY = box.max.y - insetTop;
+  if (meshFloorY != null) {
+    console.info("[LOBBY] 바닥면 추정 Y:", meshFloorY.toFixed(3), "(bbox.min:", box.min.y.toFixed(3), ")");
+  }
+  if (LOBBY_BOUNDS.minX >= LOBBY_BOUNDS.maxX) {
+    const m = (box.min.x + box.max.x) * 0.5;
+    LOBBY_BOUNDS.minX = m - 0.08;
+    LOBBY_BOUNDS.maxX = m + 0.08;
+  }
+  if (LOBBY_BOUNDS.minZ >= LOBBY_BOUNDS.maxZ) {
+    const m = (box.min.z + box.max.z) * 0.5;
+    LOBBY_BOUNDS.minZ = m - 0.08;
+    LOBBY_BOUNDS.maxZ = m + 0.08;
+  }
+  if (LOBBY_BOUNDS.minY >= LOBBY_BOUNDS.maxY) {
+    LOBBY_BOUNDS.minY = box.min.y + 0.08;
+    LOBBY_BOUNDS.maxY = box.max.y - 0.08;
+  }
+}
+
+function findLobbyObjectByName(model, name) {
+  const esc = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(`^${esc}$`, "i");
+  let found = null;
+  model.traverse((o) => {
+    if (found) return;
+    const n = (o.name || "").trim();
+    if (n && re.test(n)) found = o;
+  });
+  return found;
+}
+
+function getObjectWorldCenter(obj, out) {
+  _cubeAnchorBox.setFromObject(obj);
+  if (!_cubeAnchorBox.isEmpty()) {
+    _cubeAnchorBox.getCenter(out);
+    return out;
+  }
+  return obj.getWorldPosition(out);
+}
+
+/**
+ * 사람/실루엣/그림자 등(HIDE_PEOPLE_PATTERN) + 텍스트 메시 제거.
+ * 예전에는 full 후처리 안에서만 돌아가 minimal 에서는 GLB 그대로였음 → 둘 다에서 호출.
+ */
+function removeLobbyPeopleAndTextMeshes(model) {
+  const toRemove = [];
+  model.traverse((child) => {
+    if (!child.isMesh) return;
+    const n = (child.name || "").toLowerCase();
+    const mats = child.material ? (Array.isArray(child.material) ? child.material : [child.material]) : [];
+    const matName = mats.map((m) => (m && m.name) || "").join(" ").toLowerCase();
+    const rawName = child.name || "";
+    const isText = HIDE_TEXT_PATTERN.test(rawName) || n.includes("text");
+    const isPeople =
+      HIDE_PEOPLE_PATTERN.test(n) || HIDE_PEOPLE_PATTERN.test(matName) || HIDE_OBJECT_NAMES_EXACT.includes(rawName);
+    if (isText || isPeople) toRemove.push(child);
+  });
+  toRemove.forEach((obj) => {
+    if (obj.parent) obj.parent.remove(obj);
+  });
+  if (toRemove.length) {
+    console.info("[LOBBY] people/text 메시 제거:", toRemove.length, "(minimal·full 공통)");
+  }
+}
+
+/** expandLobbyBoundsFromModel 이 먼저 호출된 뒤: 시선·위치를 '내부 박스' 안에만 두도록 설정 */
+function frameLobbyCameraToModel(model) {
+  if (!camera || !controls || !model) return;
+  const box = new THREE.Box3().setFromObject(model);
+  if (box.isEmpty()) {
+    console.warn("[LOBBY] 바운딩 박스가 비어 있어 카메라 자동 맞춤을 건너뜁니다.");
+    return;
+  }
+  const outerSize = new THREE.Vector3();
+  box.getSize(outerSize);
+  const maxDim = Math.max(outerSize.x, outerSize.y, outerSize.z, 0.1);
+
+  const innerW = Math.max(0.05, LOBBY_BOUNDS.maxX - LOBBY_BOUNDS.minX);
+  const innerH = Math.max(0.05, LOBBY_BOUNDS.maxY - LOBBY_BOUNDS.minY);
+  const innerD = Math.max(0.05, LOBBY_BOUNDS.maxZ - LOBBY_BOUNDS.minZ);
+  const innerMin = Math.min(innerW, innerH, innerD);
+
+  model.updateMatrixWorld(true);
+  const anchor = findLobbyObjectByName(model, LOBBY_CAMERA_ANCHOR_NAME);
+  if (anchor) {
+    getObjectWorldCenter(anchor, _v3AnchorPos);
+    anchor.getWorldQuaternion(_anchorQuat);
+    _v3AnchorFwd.set(0, 0, -1).applyQuaternion(_anchorQuat).normalize();
+    camera.position.copy(_v3AnchorPos).addScaledVector(_v3AnchorFwd, LOBBY_CAMERA_ANCHOR_FORWARD_M);
+    camera.position.y += LOBBY_CAMERA_ANCHOR_UP_M;
+    controls.target.copy(_v3AnchorPos);
+    clampTargetAndCamera();
+    controls.update();
+    console.info(
+      "[LOBBY] 앵커 진입:",
+      LOBBY_CAMERA_ANCHOR_NAME,
+      "→ 로컬 −Z",
+      LOBBY_CAMERA_ANCHOR_FORWARD_M,
+      "m + 월드 Y",
+      LOBBY_CAMERA_ANCHOR_UP_M,
+      "m (이후 시선 180° 반전)"
+    );
+  } else {
+    const innerCx = (LOBBY_BOUNDS.minX + LOBBY_BOUNDS.maxX) * 0.5;
+    const innerCz = (LOBBY_BOUNDS.minZ + LOBBY_BOUNDS.maxZ) * 0.5;
+    const floorY = LOBBY_BOUNDS.minY;
+
+    const lookY = floorY + Math.min(Math.max(innerH * 0.12, 1.0), 1.45);
+    controls.target.set(innerCx, lookY, innerCz);
+
+    let eyeY = floorY + 2.0;
+    eyeY = Math.min(eyeY, LOBBY_BOUNDS.maxY - 0.15);
+    eyeY = Math.max(eyeY, LOBBY_BOUNDS.minY + 0.12);
+    const offX = innerW * 0.18;
+    const offZ = innerD * 0.16;
+    camera.position.set(innerCx + offX * 0.45, eyeY, innerCz + offZ * 0.4);
+    clampTargetAndCamera();
+    console.info(
+      "[LOBBY] 바닥 +2m 눈높이 진입 (내부 W/H/D)",
+      innerW.toFixed(2),
+      innerH.toFixed(2),
+      innerD.toFixed(2),
+      "— 이후 시선 180° 반전"
+    );
+  }
+
+  // 같은 카메라 위치에서 시선만 180° 반전: 새 타깃 = 2·카메라 − 기존 타깃
+  _flipLookT.copy(controls.target);
+  controls.target.copy(camera.position).multiplyScalar(2).sub(_flipLookT);
+  clampTargetAndCamera();
+
+  camera.near = Math.max(0.01, maxDim / 2000);
+  camera.far = Math.max(600, maxDim * 80);
+  camera.updateProjectionMatrix();
+  if (scene && scene.fog) {
+    scene.fog.near = Math.max(8, innerMin * 1.2);
+    scene.fog.far = Math.max(80, maxDim * 18);
+  }
+  // 오빗 반경: 내부 박스에 비례해 제한 (타깃 기준 구가 실내 박스에 들어가도록)
+  controls.minDistance = Math.max(0.75, innerMin * 0.045);
+  let maxOrb = Math.min(innerMin * 0.24, Math.min(innerW, innerD) * 0.26);
+  maxOrb = Math.min(maxOrb, 12);
+  controls.maxDistance = Math.max(controls.minDistance + 0.35, maxOrb);
+  controls.maxPolarAngle = Math.PI / 2 - 0.1;
+  controls.update();
+  clampTargetAndCamera();
+  controls.update();
+}
+
+/** 브라우저에 저장된 로비 첫 진입 카메라(위치·시선). F12 콘솔에서 __saveLobbyEntry() 로 현재 화면을 진입점으로 저장 */
+const LOBBY_ENTRY_STORAGE_KEY = "nurionLobbyEntryV1";
+
+function lobbyMaxEyeYForSavedEntry() {
+  const floorY = LOBBY_BOUNDS.minY;
+  // 기본 진입 ~2m + 소폭 여유; 천장에 붙은 지붕 시점은 maxY 근처라 걸러짐
+  return Math.min(LOBBY_BOUNDS.maxY - 0.12, floorY + 2.35);
+}
+
+function applySavedLobbyEntryIfAny() {
+  if (!camera || !controls) return false;
+  try {
+    const raw = localStorage.getItem(LOBBY_ENTRY_STORAGE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (!data || typeof data.px !== "number" || typeof data.tx !== "number") return false;
+    const maxEye = lobbyMaxEyeYForSavedEntry();
+    const pyClamped = Math.max(LOBBY_BOUNDS.minY, Math.min(LOBBY_BOUNDS.maxY, data.py));
+    if (pyClamped > maxEye + 0.02) {
+      try {
+        localStorage.removeItem(LOBBY_ENTRY_STORAGE_KEY);
+      } catch (_) {}
+      console.info(
+        "[LOBBY] 저장된 진입점이 지붕/높이 쪽이라 무시하고 자동 프레이밍을 유지합니다. (이전에 ?clearLobbyEntry=1 또는 __clearLobbyEntry 로 지웠을 수 있음)"
+      );
+      return false;
+    }
+    camera.position.set(data.px, data.py, data.pz);
+    controls.target.set(data.tx, data.ty, data.tz);
+    camera.updateProjectionMatrix();
+    controls.update();
+    clampTargetAndCamera();
+    controls.update();
+    console.info("[LOBBY] 저장된 진입 카메라 적용 (저장 시각:", data.savedAt || "?", ")");
+    return true;
+  } catch (e) {
+    console.warn("[LOBBY] 저장 진입점 파싱 실패:", e);
+    return false;
+  }
+}
+
+function saveLobbyEntryToStorage() {
+  if (!camera || !controls) {
+    console.warn("[LOBBY] 카메라가 없어 저장할 수 없습니다.");
+    return;
+  }
+  const p = camera.position;
+  const t = controls.target;
+  const data = {
+    px: p.x,
+    py: p.y,
+    pz: p.z,
+    tx: t.x,
+    ty: t.y,
+    tz: t.z,
+    savedAt: new Date().toISOString(),
+  };
+  try {
+    localStorage.setItem(LOBBY_ENTRY_STORAGE_KEY, JSON.stringify(data));
+    captureLobbyRecoveryCamera();
+    console.info("[LOBBY] 현재 시점이 로비 진입점으로 저장되었습니다. 새로고침 후 이 위치에서 시작합니다.", data);
+  } catch (e) {
+    console.error("[LOBBY] localStorage 저장 실패:", e);
+  }
+}
+
+function clearLobbyEntryStorage() {
+  try {
+    localStorage.removeItem(LOBBY_ENTRY_STORAGE_KEY);
+    console.info("[LOBBY] 저장된 진입점을 삭제했습니다. 다음 로드는 자동 프레이밍을 사용합니다.");
+  } catch (e) {}
+}
+
+function maybeClearLobbyEntryFromUrl() {
+  try {
+    if (/[?&]clearLobbyEntry=1(?:&|$)/i.test(location.search || "")) clearLobbyEntryStorage();
+  } catch (_) {}
+}
+
+try {
+  window.__saveLobbyEntry = saveLobbyEntryToStorage;
+  window.__clearLobbyEntry = clearLobbyEntryStorage;
+} catch (_) {}
 
 let scene, camera, renderer, controls, lobbyModel;
 const deskCylLabels = [];
@@ -238,7 +572,7 @@ const deptPages = new Map([
   ['news', document.getElementById('dept-news')],
   ['edocs', document.getElementById('dept-edocs')],
   ['software', document.getElementById('dept-software')],
-  ['smartcity', document.getElementById('dept-smartcity')],
+  ['solar', document.getElementById('dept-solar')],
 ]);
 
 function dmOpen(){
@@ -306,11 +640,11 @@ document.addEventListener('click', (e)=>{
 });
 
 window.addEventListener('load', ()=>{
-  const m = location.hash.match(/^#dept-(consulting|news|edocs|software|smartcity)$/);
+  const m = location.hash.match(/^#dept-(consulting|news|edocs|software|solar)$/);
   if (m) openDept(m[1], { updateHash:false });
 });
 window.addEventListener('hashchange', ()=>{
-  const m = location.hash.match(/^#dept-(consulting|news|edocs|software|smartcity)$/);
+  const m = location.hash.match(/^#dept-(consulting|news|edocs|software|solar)$/);
   if (m) openDept(m[1], { updateHash:false });
   else closeDept({ updateHash:false });
 });
@@ -355,6 +689,54 @@ let isMovingToTarget = false;
 const targetPosition = new THREE.Vector3();
 const targetLookAt = new THREE.Vector3();
 const MOVE_SPEED = 0.05;
+
+/** 유휴 시 카메라 위치만 이 지점으로 복귀(시선 방향은 복귀 직전 그대로) */
+const recoveryCameraPosition = new THREE.Vector3();
+let recoveryCameraCaptured = false;
+/** 0 = 아직 사용자 입력 없음(유휴 복구 비활성). 이후 orbit/휠 등으로 갱신 */
+let lastLobbyInputAt = 0;
+let suppressIdleRecoveryResetUntil = 0;
+const IDLE_RECOVERY_MS = 3000;
+/** 로비 AABB 경계에 너무 가까울 때(벽 밖 시야 느낌) 유휴 복구까지 대기 시간 */
+const EDGE_RECOVERY_MS = 1000;
+
+function captureLobbyRecoveryCamera() {
+  if (!camera || !controls) return;
+  recoveryCameraPosition.copy(camera.position);
+  recoveryCameraCaptured = true;
+}
+
+function applyIdleRecoveryToCamera() {
+  if (!camera || !controls || !recoveryCameraCaptured) return;
+  try {
+    if (window.__isMobile) return;
+  } catch (_) {}
+  if (isMovingToTarget) return;
+  const dir = new THREE.Vector3().subVectors(controls.target, camera.position);
+  const len = dir.length();
+  if (len < 1e-4) {
+    lastLobbyInputAt = performance.now();
+    return;
+  }
+  dir.multiplyScalar(1 / len);
+  const dist = Math.max(controls.minDistance + 0.001, Math.min(controls.maxDistance, len));
+  camera.position.copy(recoveryCameraPosition);
+  controls.target.copy(recoveryCameraPosition).addScaledVector(dir, dist);
+  clampTargetAndCamera();
+  controls.update();
+  suppressIdleRecoveryResetUntil = performance.now() + 450;
+  lastLobbyInputAt = performance.now();
+}
+
+function pingIdleRecoveryUserActivity() {
+  if (performance.now() < suppressIdleRecoveryResetUntil) return;
+  if (!recoveryCameraCaptured) return;
+  lastLobbyInputAt = performance.now();
+}
+
+try {
+  window.__captureLobbyRecoveryCamera = captureLobbyRecoveryCamera;
+} catch (_) {}
 
 /** 인트로 종료 직후: ?mobileLobby=1 일 때만 2.5D 로비(그 외에는 3D 캔버스 유지) */
 function enterMainAfterIntro() {
@@ -403,7 +785,12 @@ function initIntro() {
     if (done) return;
     done = true;
     try { video && video.pause(); } catch (e) {}
-    try { container.classList.add('hidden'); } catch (e) {}
+    try {
+      container.classList.add('hidden');
+      container.style.zIndex = '0';
+      container.style.visibility = 'hidden';
+      container.style.display = 'none';
+    } catch (e) {}
     setTimeout(() => {
       try { container.remove(); } catch (e) {}
     }, 900);
@@ -519,6 +906,184 @@ function createLabelTexture(text, isGlow = false, targetWidth = null, targetHeig
   tex.offset.set(0, 0);
   tex.needsUpdate = true;
   return tex;
+}
+
+/** 사업부명 — 흰 글자 알파만(다층 메시에 색 곱해 돌출). 이탤릭 유지 */
+function createDeptNameAlphaTexture(text) {
+  const w = 1536;
+  const h = 640;
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, w, h);
+  const pad = Math.min(w, h) * 0.06;
+  const len = Math.max(text.length, 4);
+  const fontSize = Math.min(128, Math.floor((w - pad * 2) / (len * 0.82)));
+  ctx.font = `italic 700 ${fontSize}px "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(text, w / 2, h / 2);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = THREE.ClampToEdgeWrapping;
+  tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.needsUpdate = true;
+  return tex;
+}
+
+const _wallFaceCenterA = new THREE.Vector3();
+const _wallFaceCenterB = new THREE.Vector3();
+const _wallNL = new THREE.Vector3();
+const _lobbyMidForWall = new THREE.Vector3();
+
+const _wallBasePos = new THREE.Vector3();
+
+/** 벽 Cube 앞면에 사업부명: 다층 Plane으로 돌출 + 매 프레임 앞뒤 펄스·UV 흐름(원본 메시 유지) */
+function addWallCubeDeptExtrudedAnimatedLabel(mesh, text) {
+  if (!mesh?.isMesh || !mesh.geometry || mesh.userData.__wallDeptLabel) return;
+  const g = mesh.geometry;
+  if (!g.boundingBox) g.computeBoundingBox();
+  const min = g.boundingBox.min;
+  const max = g.boundingBox.max;
+  const sx = max.x - min.x;
+  const sy = max.y - min.y;
+  const sz = max.z - min.z;
+  const midLocal = new THREE.Vector3((min.x + max.x) * 0.5, (min.y + max.y) * 0.5, (min.z + max.z) * 0.5);
+
+  _lobbyMidForWall.set(
+    (LOBBY_BOUNDS.minX + LOBBY_BOUNDS.maxX) * 0.5,
+    (LOBBY_BOUNDS.minY + LOBBY_BOUNDS.maxY) * 0.5,
+    (LOBBY_BOUNDS.minZ + LOBBY_BOUNDS.maxZ) * 0.5
+  );
+  mesh.worldToLocal(_lobbyMidForWall);
+
+  const dims = [
+    { name: "x", size: sx },
+    { name: "y", size: sy },
+    { name: "z", size: sz },
+  ];
+  dims.sort((a, b) => a.size - b.size);
+  const thin = dims[0].name;
+
+  let planeW;
+  let planeH;
+  if (thin === "x") {
+    planeW = sz * 0.9;
+    planeH = sy * 0.9;
+    _wallFaceCenterA.set(min.x, midLocal.y, midLocal.z);
+    _wallNL.set(-1, 0, 0);
+    _wallFaceCenterB.set(max.x, midLocal.y, midLocal.z);
+  } else if (thin === "z") {
+    planeW = sx * 0.9;
+    planeH = sy * 0.9;
+    _wallFaceCenterA.set(midLocal.x, midLocal.y, min.z);
+    _wallNL.set(0, 0, -1);
+    _wallFaceCenterB.set(midLocal.x, midLocal.y, max.z);
+  } else {
+    planeW = sx * 0.9;
+    planeH = sz * 0.9;
+    _wallFaceCenterA.set(midLocal.x, min.y, midLocal.z);
+    _wallNL.set(0, -1, 0);
+    _wallFaceCenterB.set(midLocal.x, max.y, midLocal.z);
+  }
+
+  const nB = _wallNL.clone().negate();
+  const dotA = _wallNL.dot(_lobbyMidForWall.clone().sub(_wallFaceCenterA));
+  const dotB = nB.dot(_lobbyMidForWall.clone().sub(_wallFaceCenterB));
+  const useA = dotA >= dotB;
+  const faceCenter = useA ? _wallFaceCenterA : _wallFaceCenterB;
+  const nLoc = useA ? _wallNL : nB;
+  nLoc.normalize();
+
+  const tex = createDeptNameAlphaTexture(text);
+  const group = new THREE.Group();
+  group.name = `__wall_dept_extrude__${text}`;
+  group.renderOrder = 14;
+
+  _wallBasePos.copy(faceCenter).addScaledVector(nLoc, 0.016);
+  group.position.copy(_wallBasePos);
+  group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), nLoc);
+
+  const cBack = new THREE.Color(0x051a2e);
+  const cFront = new THREE.Color(0xccffff);
+  for (let i = 0; i < WALL_DEPT_EXTRUDE_LAYERS; i++) {
+    const u = WALL_DEPT_EXTRUDE_LAYERS > 1 ? i / (WALL_DEPT_EXTRUDE_LAYERS - 1) : 1;
+    const col = cBack.clone().lerp(cFront, u);
+    const mat = new THREE.MeshBasicMaterial({
+      map: tex,
+      transparent: true,
+      opacity: 0.78 + u * 0.2,
+      alphaTest: 0.04,
+      depthWrite: u > 0.7,
+      depthTest: true,
+      side: THREE.DoubleSide,
+      color: col,
+    });
+    const plane = new THREE.Mesh(new THREE.PlaneGeometry(planeW, planeH), mat);
+    plane.position.z = i * WALL_DEPT_LAYER_STEP;
+    plane.renderOrder = 10 + i;
+    group.add(plane);
+  }
+
+  mesh.add(group);
+  mesh.userData.__wallDeptLabel = true;
+
+  wallDeptExtrusionAnimators.push({
+    group,
+    basePos: _wallBasePos.clone(),
+    n: nLoc.clone(),
+    phase: Math.random() * Math.PI * 2,
+    tex,
+  });
+}
+
+function updateWallDeptExtrusionLabels() {
+  const t = performance.now() * 0.001;
+  for (let i = wallDeptExtrusionAnimators.length - 1; i >= 0; i--) {
+    const item = wallDeptExtrusionAnimators[i];
+    if (!item.group?.parent) {
+      wallDeptExtrusionAnimators.splice(i, 1);
+      continue;
+    }
+    const pulse = Math.sin(t * 1.35 + item.phase) * 0.042;
+    item.group.position.copy(item.basePos).addScaledVector(item.n, pulse);
+    if (item.tex) {
+      item.tex.offset.x = Math.sin(t * 0.62 + item.phase) * 0.038;
+      item.tex.offset.y = Math.cos(t * 0.48 + item.phase * 0.55) * 0.018;
+    }
+  }
+}
+
+function applyMonitorWallCubeDeptLabels(model) {
+  if (!model || MONITOR_WALL_CUBE_MESH_NAMES.length !== DESK_LABELS.length) return;
+  model.updateMatrixWorld(true);
+  let count = 0;
+  MONITOR_WALL_CUBE_MESH_NAMES.forEach((raw, i) => {
+    const label = DESK_LABELS[i]?.label || "";
+    if (!label) return;
+    const obj = findLobbyObjectByName(model, raw.trim());
+    if (!obj) {
+      console.warn("[LOBBY] 벽 Cube GLB에서 찾지 못함(이름·대소문자 확인):", raw);
+      return;
+    }
+    if (obj.isMesh) {
+      addWallCubeDeptExtrudedAnimatedLabel(obj, label);
+      count++;
+      return;
+    }
+    let applied = false;
+    obj.traverse((child) => {
+      if (applied || !child.isMesh) return;
+      addWallCubeDeptExtrudedAnimatedLabel(child, label);
+      applied = true;
+      count++;
+    });
+    if (!applied) console.warn("[LOBBY] 벽 Cube 오브젝트에 Mesh 자식 없음:", raw, obj.type);
+  });
+  if (count) console.info("[LOBBY] 벽 Cube 사업부명 돌출·움직임 라벨 부착:", count);
 }
 
 function createCylinderLabelTexture(text) {
@@ -768,38 +1333,208 @@ function normalizePlaneName(name) {
   return name.toLowerCase().replace(/\./g, '').replace(/_\d+$/, '');
 }
 
+/** DESK_LABELS 순서(1~5)와 동일 — 사업부 HTML (DESK_LINKS 키 = normalizePlaneName(Plane 이름)) */
+function getDeptPageUrlForPlanetSlot(slot1to5) {
+  const i = slot1to5 - 1;
+  if (i < 0 || i >= DESK_LABELS.length) return null;
+  const key = normalizePlaneName(DESK_LABELS[i].name);
+  return DESK_LINKS[key] || null;
+}
+
+/**
+ * 클릭한 메시가 monitor_planet1~5 하위이거나, 모니터 앞 벽 Cube(Cube.023 등)인 경우 1~5 슬롯 반환.
+ */
+function findPlanetClickSlotFromObject(obj) {
+  let cur = obj;
+  while (cur) {
+    const n = (cur.name || "").trim();
+    const m = /^monitor_planet(\d+)$/i.exec(n);
+    if (m) {
+      const idx = parseInt(m[1], 10);
+      if (idx >= 1 && idx <= 5) return idx;
+    }
+    cur = cur.parent;
+  }
+  let cur2 = obj;
+  while (cur2) {
+    const key = (cur2.name || "").trim().toLowerCase();
+    const wi = MONITOR_WALL_CUBE_MESH_NAMES.findIndex((x) => x.trim().toLowerCase() === key);
+    if (wi >= 0) return wi + 1;
+    cur2 = cur2.parent;
+  }
+  return null;
+}
+
+function openDeptForPlanetSlot(slot1to5, hitPoint) {
+  const url = getDeptPageUrlForPlanetSlot(slot1to5);
+  if (url) {
+    window.location.href = url;
+    return true;
+  }
+  const i = slot1to5 - 1;
+  const label = DESK_LABELS[i]?.label;
+  if (!label) return false;
+  const deptKey = DESK_TO_DEPTKEY[label] || null;
+  const deskId = normalizePlaneName(DESK_LABELS[i].name);
+  selectedDeskData = {
+    deptKey,
+    label,
+    deskId,
+    planetIndex: i,
+    planetPath: DESK_LABELS[i]?.planetTexture || null,
+    hitPoint: hitPoint || null,
+  };
+  showDeptPanel(selectedDeskData);
+  return true;
+}
+
 const _floorObsBox = new THREE.Box3();
 const _floorObsSize = new THREE.Vector3();
 const _floorObsCenter = new THREE.Vector3();
 
-/** 사각형 바닥 위에 깔아 둔 Blender 기본 Cube/Circle 등(낮은 위치·작은 덩어리만) 제거 */
+function isLobbyCameraAnchorMeshName(name) {
+  if (!name || !LOBBY_CAMERA_ANCHOR_NAME) return false;
+  return name.trim().toLowerCase() === LOBBY_CAMERA_ANCHOR_NAME.trim().toLowerCase();
+}
+
+/** 바닥 장애물: (1) Blender 기본체 이름 (2) 실내 박스 XZ 중심 근처·바닥면 위 작은 메시. minimal·full 공통 */
 function removeFloorObstacleMeshes(model) {
   const deskKeys = new Set(DESK_LABELS.map((d) => normalizePlaneName(d.name)));
+  const deskArrowPlaneKeys = new Set();
+  DESK_ARROW_PLANES.forEach((g) => {
+    g.names.forEach((n) => deskArrowPlaneKeys.add(normalizePlaneName(n)));
+  });
   const removed = [];
   model.updateMatrixWorld(true);
-  const toRemove = [];
+  expandLobbyBoundsFromModel(model);
+
+  const toRemoveSet = new Set();
+
+  const worldBoxForFloor = new THREE.Box3().setFromObject(model);
+  const floorRefY = worldBoxForFloor.isEmpty()
+    ? 0
+    : estimateLobbyFloorSurfaceY(model, worldBoxForFloor) ?? worldBoxForFloor.min.y;
+
+  const innerW = Math.max(0.05, LOBBY_BOUNDS.maxX - LOBBY_BOUNDS.minX);
+  const innerD = Math.max(0.05, LOBBY_BOUNDS.maxZ - LOBBY_BOUNDS.minZ);
+  const lobbyCx = (LOBBY_BOUNDS.minX + LOBBY_BOUNDS.maxX) * 0.5;
+  const lobbyCz = (LOBBY_BOUNDS.minZ + LOBBY_BOUNDS.maxZ) * 0.5;
+  /** GLB 전역 bbox XZ 중심(실내 LOBBY_BOUNDS 중심과 다를 수 있음 — 휴리스틱 2·3번 앵커) */
+  const worldCx = worldBoxForFloor.isEmpty()
+    ? lobbyCx
+    : (worldBoxForFloor.min.x + worldBoxForFloor.max.x) * 0.5;
+  const worldCz = worldBoxForFloor.isEmpty()
+    ? lobbyCz
+    : (worldBoxForFloor.min.z + worldBoxForFloor.max.z) * 0.5;
+
+  /** 모니터 앞 사업부명 붙일 벽 Cube — 바닥 장애물 휴리스틱(Cube.* 제거)에서 반드시 제외 */
+  const monitorWallCubeKeys = new Set(MONITOR_WALL_CUBE_MESH_NAMES.map((n) => n.trim().toLowerCase()));
+
+  const excludeDeskAndFloor = (o) => {
+    const name = (o.name || "").trim();
+    const low = name.toLowerCase();
+    if (monitorWallCubeKeys.has(low)) return true;
+    if (low.includes("floor")) return true;
+    if (isLobbyCameraAnchorMeshName(name)) return true;
+    if (deskKeys.has(normalizePlaneName(name))) return true;
+    if (deskArrowPlaneKeys.has(normalizePlaneName(name))) return true;
+    if (low.startsWith("desk_")) return true;
+    return false;
+  };
+
   model.traverse((o) => {
     if (!o.isMesh || o.userData?.isDesk) return;
     const name = (o.name || "").trim();
-    if (!name || !FLOOR_OBSTACLE_NAME_PATTERN.test(name)) return;
-    const low = name.toLowerCase();
-    if (low.includes("floor")) return;
-    if (deskKeys.has(normalizePlaneName(name))) return;
-    if (low.startsWith("desk_")) return;
+    if (!name) return;
+    const matchesPattern = FLOOR_OBSTACLE_NAME_PATTERN.test(name);
+    const matchesExact = FLOOR_OBSTACLE_NAMES_EXACT.includes(name);
+    if (!matchesPattern && !matchesExact) return;
+    if (excludeDeskAndFloor(o)) return;
 
     _floorObsBox.setFromObject(o);
     _floorObsBox.getSize(_floorObsSize);
     _floorObsBox.getCenter(_floorObsCenter);
     const maxDim = Math.max(_floorObsSize.x, _floorObsSize.y, _floorObsSize.z);
     if (maxDim > FLOOR_OBSTACLE_MAX_DIM) return;
-    if (_floorObsBox.min.y > FLOOR_OBSTACLE_MAX_BOTTOM_Y) return;
-    if (_floorObsCenter.y > FLOOR_OBSTACLE_MAX_CENTER_Y) return;
-    if (_floorObsBox.max.y > FLOOR_OBSTACLE_MAX_TOP_Y) return;
+    if (_floorObsBox.min.y < floorRefY - 0.2) return;
+    if (_floorObsBox.min.y > floorRefY + FLOOR_OBSTACLE_MAX_ONFLOOR_GAP) return;
+    if (_floorObsCenter.y > floorRefY + FLOOR_OBSTACLE_MAX_CENTER_ABOVE_FLOOR) return;
+    if (_floorObsBox.max.y > floorRefY + FLOOR_OBSTACLE_MAX_TOP_ABOVE_FLOOR) return;
 
-    toRemove.push(o);
+    toRemoveSet.add(o);
   });
 
-  toRemove.forEach((o) => {
+  const rLobby = Math.min(innerW, innerD) * FLOOR_CENTER_OBSTACLE_RADIUS_FRAC;
+  const rTiny = Math.min(innerW, innerD) * FLOOR_TINY_OBSTACLE_RADIUS_FRAC;
+
+  const tryPassCenterObstacle = (o, maxRadius, maxDimHi, maxYSize, maxCenterAbove) => {
+    if (!o.isMesh || o.userData?.isDesk) return;
+    if (toRemoveSet.has(o)) return;
+    if (excludeDeskAndFloor(o)) return;
+
+    _floorObsBox.setFromObject(o);
+    _floorObsBox.getSize(_floorObsSize);
+    _floorObsBox.getCenter(_floorObsCenter);
+    const dLobby = Math.hypot(_floorObsCenter.x - lobbyCx, _floorObsCenter.z - lobbyCz);
+    const dWorld = Math.hypot(_floorObsCenter.x - worldCx, _floorObsCenter.z - worldCz);
+    if (Math.min(dLobby, dWorld) > maxRadius) return;
+    const maxDim = Math.max(_floorObsSize.x, _floorObsSize.y, _floorObsSize.z);
+    const minH = Math.min(_floorObsSize.x, _floorObsSize.z);
+    if (maxDim > maxDimHi) return;
+    if (_floorObsSize.y > maxYSize) return;
+    if (_floorObsBox.min.y < floorRefY - 0.2) return;
+    if (_floorObsBox.min.y > floorRefY + FLOOR_OBSTACLE_MAX_ONFLOOR_GAP) return;
+    if (_floorObsCenter.y > floorRefY + maxCenterAbove) return;
+    if (_floorObsSize.y < 0.22 && minH > 2.5) return;
+
+    toRemoveSet.add(o);
+  };
+
+  model.traverse((o) => {
+    tryPassCenterObstacle(o, rLobby, 12, 5, 2.85);
+  });
+
+  model.traverse((o) => {
+    tryPassCenterObstacle(o, rTiny, 3.2, 2.45, 2.65);
+  });
+
+  /** 실내 XZ와 겹치는 작은 바닥 물체(이름 없는 Mesh·코너 등 원형 반경 밖도 포함). 벽/큰 바닥판은 제외 */
+  const roomMinSpan = Math.min(innerW, innerD);
+  const tryPassInRoomFloorClutter = (o) => {
+    if (!o.isMesh || o.userData?.isDesk) return;
+    if (toRemoveSet.has(o)) return;
+    if (excludeDeskAndFloor(o)) return;
+
+    _floorObsBox.setFromObject(o);
+    _floorObsBox.getSize(_floorObsSize);
+    _floorObsBox.getCenter(_floorObsCenter);
+    const minXZ = Math.min(_floorObsSize.x, _floorObsSize.z);
+    const maxXZ = Math.max(_floorObsSize.x, _floorObsSize.z);
+    const maxDim = Math.max(_floorObsSize.x, _floorObsSize.y, _floorObsSize.z);
+
+    if (maxDim > 14) return;
+    if (_floorObsBox.min.y < floorRefY - 0.2) return;
+    if (_floorObsBox.min.y > floorRefY + FLOOR_OBSTACLE_MAX_ONFLOOR_GAP) return;
+    if (_floorObsCenter.y > floorRefY + 3.05) return;
+    if (_floorObsBox.max.y > floorRefY + FLOOR_OBSTACLE_MAX_TOP_ABOVE_FLOOR + 0.4) return;
+
+    if (_floorObsSize.y > 2.0 && minXZ < 0.38 && maxXZ > minXZ * 3) return;
+    if (_floorObsSize.y < 0.1 && maxXZ > 0.55 * roomMinSpan && minXZ > 0.2 * roomMinSpan) return;
+    if (_floorObsSize.y < 0.14 && minXZ > 0.38 * roomMinSpan) return;
+
+    if (_floorObsBox.max.x < LOBBY_BOUNDS.minX || _floorObsBox.min.x > LOBBY_BOUNDS.maxX) return;
+    if (_floorObsBox.max.z < LOBBY_BOUNDS.minZ || _floorObsBox.min.z > LOBBY_BOUNDS.maxZ) return;
+
+    if (maxXZ > 0.72 * roomMinSpan) return;
+
+    toRemoveSet.add(o);
+  };
+
+  model.traverse((o) => {
+    tryPassInRoomFloorClutter(o);
+  });
+
+  toRemoveSet.forEach((o) => {
     removed.push(o.name);
     try {
       if (o.material) {
@@ -821,6 +1556,108 @@ function removeFloorObstacleMeshes(model) {
   });
   if (removed.length) console.log("🧹 바닥 장애물 제거:", removed.length, removed);
 }
+
+const _listNearBox = new THREE.Box3();
+const _listC = new THREE.Vector3();
+const _listS = new THREE.Vector3();
+
+/** 이름이 비어 있어도 Three.js uuid 로 식별 가능 — 콘솔: __listLobbyMeshesNearCenter() → __removeLobbyMeshByUuid('…') */
+function listLobbyMeshesNearCenter(maxRadiusFrac = 0.32) {
+  if (!lobbyModel) {
+    console.warn("[LOBBY] lobbyModel 없음 — GLB 로드 후 다시 실행하세요.");
+    return [];
+  }
+  lobbyModel.updateMatrixWorld(true);
+  const worldBox = new THREE.Box3().setFromObject(lobbyModel);
+  if (worldBox.isEmpty()) return [];
+  const sx = worldBox.max.x - worldBox.min.x;
+  const sz = worldBox.max.z - worldBox.min.z;
+  const cx = (worldBox.min.x + worldBox.max.x) * 0.5;
+  const cz = (worldBox.min.z + worldBox.max.z) * 0.5;
+  const r = Math.min(sx, sz) * maxRadiusFrac;
+  const rows = [];
+  lobbyModel.traverse((o) => {
+    if (!o.isMesh) return;
+    _listNearBox.setFromObject(o);
+    _listNearBox.getCenter(_listC);
+    _listNearBox.getSize(_listS);
+    const dist = Math.hypot(_listC.x - cx, _listC.z - cz);
+    if (dist > r) return;
+    rows.push({
+      name: o.name || "(unnamed)",
+      uuid: o.uuid,
+      distXZ: dist,
+      cx: _listC.x,
+      cy: _listC.y,
+      cz: _listC.z,
+      sx: _listS.x,
+      sy: _listS.y,
+      sz: _listS.z,
+    });
+  });
+  rows.sort((a, b) => a.distXZ - b.distXZ);
+  console.table(
+    rows.map((row) => ({
+      name: row.name,
+      uuid: row.uuid,
+      distXZ: +row.distXZ.toFixed(3),
+      cx: +row.cx.toFixed(2),
+      cy: +row.cy.toFixed(2),
+      cz: +row.cz.toFixed(2),
+      sx: +row.sx.toFixed(2),
+      sy: +row.sy.toFixed(2),
+      sz: +row.sz.toFixed(2),
+    }))
+  );
+  console.info(
+    "[LOBBY] 후보 제거: __removeLobbyMeshByUuid('uuid') — 영구 반영은 블렌더에서 이름 지정 후 app.js 의 FLOOR_OBSTACLE_NAMES_EXACT 등에 추가"
+  );
+  return rows;
+}
+
+function removeLobbyMeshByUuid(uuid) {
+  if (!lobbyModel || !uuid) {
+    console.warn("[LOBBY] lobbyModel 이 없거나 uuid 가 비어 있습니다.");
+    return false;
+  }
+  let found = null;
+  lobbyModel.traverse((o) => {
+    if (o.isMesh && o.uuid === uuid) found = o;
+  });
+  if (!found) {
+    console.warn("[LOBBY] 해당 uuid 의 Mesh 없음:", uuid);
+    return false;
+  }
+  if (isLobbyCameraAnchorMeshName(found.name)) {
+    console.warn("[LOBBY] 카메라 앵커 메시는 제거하지 않습니다:", found.name);
+    return false;
+  }
+  try {
+    if (found.material) {
+      if (Array.isArray(found.material)) {
+        found.material.forEach((m) => {
+          if (m?.map) m.map.dispose?.();
+          m?.dispose?.();
+        });
+      } else {
+        if (found.material.map) found.material.map.dispose?.();
+        found.material.dispose?.();
+      }
+    }
+    found.geometry?.dispose?.();
+    found.parent?.remove(found);
+  } catch (e) {
+    console.warn("[LOBBY] Mesh 제거 실패:", e);
+    return false;
+  }
+  console.info("[LOBBY] Mesh 제거됨:", found.name || "(unnamed)", found.uuid);
+  return true;
+}
+
+try {
+  window.__listLobbyMeshesNearCenter = (frac) => listLobbyMeshesNearCenter(frac === undefined ? 0.32 : frac);
+  window.__removeLobbyMeshByUuid = removeLobbyMeshByUuid;
+} catch (_) {}
 
 function analyzeDeskTextures(model) {
   const nameToLabel = new Map(
@@ -1102,8 +1939,14 @@ async function applyDeskLabelsAsync(model) {
   );
 }
 
-/** minimal 모드: 모델 그대로만 표시(새 GLB 넣고 동작·스케일 확인용). 데스크 클릭 등은 full 에서 동작. */
+/**
+ * minimal: 행성 데스크 치환·바닥 영상 등 full 후처리 없음.
+ * 다만 사람/텍스트 제거·바닥 장애물 휴리스틱·바운딩·카메라 앵커는 적용됨.
+ */
 function applyMinimalLobbyPostProcess(model) {
+  removeLobbyPeopleAndTextMeshes(model);
+  removeFloorObstacleMeshes(model);
+  expandLobbyBoundsFromModel(model);
   model.traverse((child) => {
     if (child.isMesh) {
       child.castShadow = true;
@@ -1111,9 +1954,14 @@ function applyMinimalLobbyPostProcess(model) {
     }
   });
   scene.add(model);
+  expandLobbyBoundsFromModel(model);
+  applyMonitorWallCubeDeptLabels(model);
+  frameLobbyCameraToModel(model);
+  applySavedLobbyEntryIfAny();
+  captureLobbyRecoveryCamera();
   showGlbVerifyBannerIfRequested();
   console.info(
-    '[LOBBY] minimal 모드: 후처리 없이 로드됨. 데스크/바닥영상/퍼지를 쓰려면 netlify/app.js 의 LOBBY_PROCESSING 을 "full" 로 변경 후 bundle 재빌드.'
+    '[LOBBY] minimal 모드: 데스크 행성·바닥영상 등 full 후처리 없음(사람·장애물 휴리스틱·카메라는 적용). full 은 ?lobbyFull=1 또는 LOBBY_PROCESSING="full" + npm run build:netlify'
   );
 }
 
@@ -1196,7 +2044,7 @@ function showGlbVerifyBannerIfRequested() {
       String(fp?.url || LOBBY_MODEL_PATH),
       "",
       "GLB만 교체했는데 지문이 그대로 → 다른 경로 파일이거나 캐시.",
-      "지문은 바뀌는데 화면만 같음 → full 후처리가 덮음. minimal 로 비교.",
+      "지문은 바뀌는데 화면만 이상함 → ?lobbyFull=1 이 메시를 지웠을 수 있음. 기본 minimal 로 비교.",
     ];
     div.textContent = lines.join("\n");
     document.body.appendChild(div);
@@ -1227,10 +2075,11 @@ function createLobbyDebugOverlay() {
       "__useThreeLobby → " + (typeof window.__useThreeLobby !== "undefined" ? window.__useThreeLobby : "(unset)"),
       "asset base → " + getBundleScriptBaseUrl(),
       "GLB → " + LOBBY_MODEL_PATH,
-      "후처리 → " + LOBBY_PROCESSING,
+      "후처리 → " + effectiveLobbyProcessing() + " (?lobbyFull=1=full, 기본 minimal)",
       "매칭 데스크 수 → " + (typeof window.__lobbyDeskCount !== "undefined" ? window.__lobbyDeskCount : "(로드 전)"),
       "",
       "2.5D만: ?mobileLobby=1 (기본은 항상 3D)",
+      "진입 카메라: 콘솔 __saveLobbyEntry() / __clearLobbyEntry() / URL ?clearLobbyEntry=1",
     ];
     div.textContent = lines.join("\n");
   };
@@ -1242,7 +2091,9 @@ function lobbyLoadErrorBlendFile() {
   showLobbyLoadError(
     '<p>이 파일은 <strong>Blender 원본(.blend)</strong>입니다. 웹에서는 <strong>glTF 2.0 바이너리(.glb)</strong>만 불러올 수 있습니다.</p>' +
       '<p style="opacity:.85;font-size:13px;margin-top:12px;text-align:left;max-width:520px;margin-left:auto;margin-right:auto">' +
-      "Blender 메뉴에서 <strong>파일 → 내보내기 → glTF 2.0 (.glb)</strong>로 내보낸 뒤, 그 파일을 <code style=\"font-size:12px\">netlify/assets/nurion_lobby.glb</code> 위치에 두고 <code style=\"font-size:12px\">npm run build:netlify</code> 후 다시 배포하세요. " +
+      "Blender 메뉴에서 <strong>파일 → 내보내기 → glTF 2.0 (.glb)</strong>로 내보낸 뒤, 그 파일을 <code style=\"font-size:12px\">netlify/assets/" +
+      LOBBY_GLB_FILENAME +
+      "</code> 위치에 두고 <code style=\"font-size:12px\">npm run build:netlify</code> 후 다시 배포하세요. " +
       "<strong>.blend</strong>를 복사한 뒤 확장자만 <code>.glb</code>로 바꾸면 동작하지 않습니다." +
       "</p>"
   );
@@ -1289,11 +2140,24 @@ function initThree() {
   controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.05;
-  controls.minDistance = 8;
-  controls.maxDistance = 50;
-  controls.maxPolarAngle = Math.PI / 2 - 0.05;
-  controls.minPolarAngle = 0.1;
+  controls.minDistance = 4;
+  controls.maxDistance = 36;
+  controls.maxPolarAngle = Math.PI / 2 - 0.08;
+  controls.minPolarAngle = 0.15;
   controls.target.set(0, 2, 0);
+  maybeClearLobbyEntryFromUrl();
+
+  // 유휴 복구: OrbitControls 'change'는 damp·clamp 후에도 매 프레임 올 수 있어 lastLobbyInputAt이
+  // 영원히 갱신됨 → 3초 유휴가 성립하지 않음. 실제 포인터·휠만 반영.
+  renderer.domElement.addEventListener("pointerdown", pingIdleRecoveryUserActivity);
+  renderer.domElement.addEventListener(
+    "pointermove",
+    (e) => {
+      if (e.buttons !== 0) pingIdleRecoveryUserActivity();
+    },
+    { passive: true }
+  );
+  renderer.domElement.addEventListener("wheel", pingIdleRecoveryUserActivity, { passive: true });
 
   scene.add(new THREE.AmbientLight(0x404080, 0.5));
   const dir = new THREE.DirectionalLight(0xffffff, 0.8);
@@ -1361,7 +2225,7 @@ function initThree() {
           sizeX: _fpSize.x,
           sizeY: _fpSize.y,
           sizeZ: _fpSize.z,
-          processing: LOBBY_PROCESSING,
+          processing: effectiveLobbyProcessing(),
           url: LOBBY_MODEL_PATH,
         };
       } catch (_) {}
@@ -1375,18 +2239,18 @@ function initThree() {
           "×" +
           _fpSize.z.toFixed(2) +
           " | 모드=" +
-          LOBBY_PROCESSING
+          effectiveLobbyProcessing()
       );
       console.info(
-        "[LOBBY] GLB 파일을 바꿨는데 이 지문 숫자가 그대로면 → 다른 경로의 파일을 보거나 캐시입니다. 숫자가 바뀌는데 화면만 같으면 → full 모드 후처리가 씬을 덮어쓴 것일 수 있습니다(아래 minimal 안내)."
+        "[LOBBY] GLB 파일을 바꿨는데 이 지문 숫자가 그대로면 → 다른 경로의 파일이거나 캐시입니다. 화면만 이상하면 ?lobbyFull=1(full)이 메시를 많이 지웠을 수 있음 → 기본 minimal로 비교."
       );
-      if (LOBBY_PROCESSING === "full") {
+      if (effectiveLobbyProcessing() === "full") {
         console.info(
-          "[LOBBY] full: 데스크 행성·퍼지·바닥 영상 등으로 편집한 GLB와 화면이 많이 달라질 수 있습니다. 원본만 확인하려면 app.js 에서 LOBBY_PROCESSING 을 \"minimal\" 로 바꾼 뒤 npm run build:netlify"
+          "[LOBBY] full: Plane 이름·퍼지가 새 GLB와 안 맞으면 로비가 거의 사라질 수 있음. 문제 시 ?lobbyFull 제거(기본 minimal) 또는 전체 씬 glb 사용"
         );
       }
 
-      if (LOBBY_PROCESSING === 'minimal') {
+      if (effectiveLobbyProcessing() === 'minimal') {
         applyMinimalLobbyPostProcess(lobbyModel);
         return;
       }
@@ -1450,7 +2314,6 @@ function initThree() {
       console.log('=== GLB 정보 분석 완료 ===\n');
       
       const namesList = [];
-      const toRemove = [];
       let floorMaterialColor = null;
       const blueFloorMeshes = [];
 
@@ -1462,6 +2325,8 @@ function initThree() {
         }
       });
 
+      removeLobbyPeopleAndTextMeshes(lobbyModel);
+
       lobbyModel.traverse((child) => {
         if (DEBUG_LOG_GLB_NAMES) namesList.push(child.name || '(unnamed)');
         if (child.isMesh) child.castShadow = child.receiveShadow = true;
@@ -1469,21 +2334,16 @@ function initThree() {
         const mats = child.material ? (Array.isArray(child.material) ? child.material : [child.material]) : [];
         const matName = mats.map((m) => (m && m.name) || '').join(' ').toLowerCase();
         const rawName = child.name || "";
-        const isText = HIDE_TEXT_PATTERN.test(rawName) || n.includes('text');
         const isPageText = HIDE_PAGE_TEXT_PATTERN.test(rawName);
-        const isPeople = HIDE_PEOPLE_PATTERN.test(n) || HIDE_PEOPLE_PATTERN.test(matName) || HIDE_OBJECT_NAMES_EXACT.includes(rawName);
         const isFloor = n.includes('floor');
         const isFloorLineMat = HIDE_FLOOR_LINE_MAT_PATTERN.test(matName);
         const isBlue = rawName.includes('n_419') || n.includes('blue') || matName.includes('blue_light') ||
           mats.some((m) => m && m.color && m.color.b > m.color.r && m.color.b > m.color.g && m.color.b > 0.2);
 
-        if (isText || isPeople) toRemove.push(child);
         if (isPageText) child.visible = false;
         if (isFloorLineMat && !isFloor) child.visible = false;
         if (isBlue && !isFloor) blueFloorMeshes.push(child);
       });
-
-      toRemove.forEach((obj) => { if (obj.parent) obj.parent.remove(obj); });
 
       const arrowPlaneNames = [];
       DESK_ARROW_PLANES.forEach((group) => {
@@ -1560,9 +2420,20 @@ function initThree() {
         });
       }
 
+      // 데스크 행성 텍스처(await) 전에 씬에 올려 인트로 직후 검은 화면만 보이는 현상 방지
+      if (!lobbyModel.parent) {
+        scene.add(lobbyModel);
+        expandLobbyBoundsFromModel(lobbyModel);
+        frameLobbyCameraToModel(lobbyModel);
+        applySavedLobbyEntryIfAny();
+        captureLobbyRecoveryCamera();
+        console.info("[LOBBY] 모델을 씬에 먼저 추가함(데스크 텍스처·후처리는 계속 진행)");
+      }
+
       await applyDeskLabelsAsync(lobbyModel);
 
       removeFloorObstacleMeshes(lobbyModel);
+      applyMonitorWallCubeDeptLabels(lobbyModel);
 
       function purgeHologramLikeObjects(model){
         const removed = [];
@@ -1762,7 +2633,7 @@ function initThree() {
       }
       try { runPurgesRepeatedly(lobbyModel); } catch(e){ console.warn('runPurgesRepeatedly 실패:', e); }
       
-      scene.add(lobbyModel);
+      if (!lobbyModel.parent) scene.add(lobbyModel);
       showGlbVerifyBannerIfRequested();
       } catch (fullErr) {
         console.error("[LOBBY] full 후처리 중 오류 — minimal 모드로 표시합니다:", fullErr);
@@ -1847,8 +2718,17 @@ function onCanvasClick(event) {
     let deskMesh = null;
     let hitPoint = null;
     for (const h of hits) {
+      const slot = findPlanetClickSlotFromObject(h.object);
+      if (slot) {
+        openDeptForPlanetSlot(slot, h.point?.clone?.() || null);
+        return;
+      }
       const d = findDeskFromObject(h.object);
-      if (d) { deskMesh = d; hitPoint = h.point?.clone?.() || null; break; }
+      if (d) {
+        deskMesh = d;
+        hitPoint = h.point?.clone?.() || null;
+        break;
+      }
     }
 
     if (deskMesh) {
@@ -1914,8 +2794,17 @@ function onCanvasTouch(event) {
     let deskMesh = null;
     let hitPoint = null;
     for (const h of hits) {
+      const slot = findPlanetClickSlotFromObject(h.object);
+      if (slot) {
+        openDeptForPlanetSlot(slot, h.point?.clone?.() || null);
+        return;
+      }
       const d = findDeskFromObject(h.object);
-      if (d) { deskMesh = d; hitPoint = h.point?.clone?.() || null; break; }
+      if (d) {
+        deskMesh = d;
+        hitPoint = h.point?.clone?.() || null;
+        break;
+      }
     }
 
     if (deskMesh) {
@@ -1967,6 +2856,22 @@ function clampTargetAndCamera() {
   p.z = Math.max(LOBBY_BOUNDS.minZ, Math.min(LOBBY_BOUNDS.maxZ, p.z));
 }
 
+/** 카메라/타깃이 LOBBY AABB 안쪽 면까지의 최소 거리(가장 가까운 벽·천장·바닥) */
+function minDistToLobbyBoundsSurface(v) {
+  const dx = Math.min(v.x - LOBBY_BOUNDS.minX, LOBBY_BOUNDS.maxX - v.x);
+  const dy = Math.min(v.y - LOBBY_BOUNDS.minY, LOBBY_BOUNDS.maxY - v.y);
+  const dz = Math.min(v.z - LOBBY_BOUNDS.minZ, LOBBY_BOUNDS.maxZ - v.z);
+  return Math.min(dx, dy, dz);
+}
+
+/** 벽·코너에 너무 붙어 바깥을 보는 느낌 → 짧은 유휴 시간 후 복구 */
+function isLobbyCameraNearBoundsEdge() {
+  if (!camera || !controls) return false;
+  const dCam = minDistToLobbyBoundsSurface(camera.position);
+  const dTgt = minDistToLobbyBoundsSurface(controls.target);
+  return dCam < 0.22 || dTgt < 0.35;
+}
+
 function updateDeskCylinderLabelFacing() {
   if (!camera || deskCylLabels.length === 0) return;
 
@@ -1999,6 +2904,9 @@ function animate() {
       isMovingToTarget = false;
       camera.position.copy(targetPosition);
       controls.target.copy(targetLookAt);
+      clampTargetAndCamera();
+      controls.update();
+      pingIdleRecoveryUserActivity();
     } else {
       camera.position.lerp(targetPosition, MOVE_SPEED);
       controls.target.lerp(targetLookAt, MOVE_SPEED);
@@ -2007,8 +2915,24 @@ function animate() {
   } else {
     controls.update();
     clampTargetAndCamera();
+    let skipIdleRecovery = false;
+    try {
+      if (window.__isMobile) skipIdleRecovery = true;
+    } catch (_) {}
+    if (
+      !skipIdleRecovery &&
+      recoveryCameraCaptured &&
+      lastLobbyInputAt > 0 &&
+      performance.now() >= suppressIdleRecoveryResetUntil
+    ) {
+      const needMs = isLobbyCameraNearBoundsEdge() ? EDGE_RECOVERY_MS : IDLE_RECOVERY_MS;
+      if (performance.now() - lastLobbyInputAt >= needMs) {
+        applyIdleRecoveryToCamera();
+      }
+    }
   }
   updateDeskCylinderLabelFacing();
+  updateWallDeptExtrusionLabels();
   renderer.render(scene, camera);
 }
 

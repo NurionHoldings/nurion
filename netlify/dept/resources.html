@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="ko" data-dept="resources">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>정책·공시 자료실 | 주식회사 누리온홀딩스</title>
+  <meta name="description" content="누리온홀딩스 각 사업부에서 공통으로 연결되는 정책·공시 중심 통합 자료실입니다. 정부정책, 공시, 인허가 절차, 시장변화, 우수사례를 사업부별 관점으로 정리합니다." />
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: rgba(255,255,255,0.08);
+      --panel-strong: rgba(255,255,255,0.12);
+      --line: rgba(255,255,255,0.14);
+      --text: #eef4ff;
+      --muted: #b8c4da;
+      --point: #7dd3fc;
+      --point-2: #86efac;
+      --warning: #fde68a;
+      --shadow: 0 24px 60px rgba(0,0,0,0.28);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --wrap: 1200px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(125,211,252,0.14), transparent 30%),
+        radial-gradient(circle at top right, rgba(134,239,172,0.10), transparent 28%),
+        linear-gradient(180deg, #08101b 0%, #0b1220 48%, #0e1728 100%);
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+
+    .wrap {
+      width: min(var(--wrap), calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(14px);
+      background: rgba(7, 12, 24, 0.72);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 0;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .brand strong {
+      font-size: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .brand span {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .gnb {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .gnb a {
+      padding: 10px 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      transition: 0.25s ease;
+    }
+
+    .gnb a:hover,
+    .gnb a.active {
+      color: #08101b;
+      background: linear-gradient(135deg, var(--point), #dbeafe);
+      border-color: transparent;
+    }
+
+    .hero {
+      padding: 86px 0 50px;
+    }
+
+    .hero-box {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .hero-copy,
+    .hero-side {
+      background: linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.05));
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius-xl);
+      padding: 34px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(125,211,252,0.12);
+      color: var(--point);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    h1, h2, h3 { margin: 0; letter-spacing: -0.03em; }
+
+    h1 {
+      margin-top: 18px;
+      font-size: clamp(2.2rem, 4vw, 4rem);
+      line-height: 1.14;
+    }
+
+    .hero-copy p {
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 1.04rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 48px;
+      padding: 0 18px;
+      border-radius: 999px;
+      font-weight: 700;
+      transition: 0.25s ease;
+      border: 1px solid transparent;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--point), #dbeafe);
+      color: #08101b;
+    }
+
+    .btn-secondary {
+      border-color: rgba(255,255,255,0.14);
+      color: var(--text);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .btn:hover { transform: translateY(-2px); }
+
+    .mini-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 22px;
+    }
+
+    .mini-card {
+      padding: 18px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .mini-card strong {
+      display: block;
+      font-size: 1.35rem;
+    }
+
+    .mini-card span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    section {
+      padding: 26px 0 80px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .section-head p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      max-width: 760px;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1.2fr auto;
+      gap: 16px;
+      margin-bottom: 26px;
+      align-items: center;
+    }
+
+    .search-box input {
+      width: 100%;
+      min-height: 54px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      padding: 0 18px;
+      outline: none;
+      font-size: 1rem;
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .chip {
+      padding: 11px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.04);
+      color: var(--muted);
+      cursor: pointer;
+      transition: 0.2s ease;
+      font-weight: 600;
+    }
+
+    .chip.active,
+    .chip:hover {
+      background: rgba(125,211,252,0.16);
+      border-color: rgba(125,211,252,0.35);
+      color: var(--text);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.05));
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      transition: 0.25s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(125,211,252,0.28);
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.07);
+      color: var(--muted);
+      font-size: 0.8rem;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .card h3 {
+      font-size: 1.26rem;
+      line-height: 1.35;
+    }
+
+    .card p {
+      margin: 12px 0 18px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .meta {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 18px;
+      font-size: 0.92rem;
+      color: #d7e1f3;
+    }
+
+    .meta strong {
+      color: var(--warning);
+      font-weight: 700;
+    }
+
+    .card-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .btn-sm {
+      min-height: 42px;
+      padding: 0 14px;
+      border-radius: 999px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+    }
+
+    .btn-sm.primary {
+      background: linear-gradient(135deg, var(--point-2), #dcfce7);
+      color: #08101b;
+      border-color: transparent;
+    }
+
+    .process {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 10px;
+    }
+
+    .step {
+      padding: 22px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.10);
+    }
+
+    .step .num {
+      width: 34px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: rgba(125,211,252,0.14);
+      color: var(--point);
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .notice-box {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .notice, .company {
+      padding: 28px;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.05));
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    .notice ul, .company ul {
+      padding-left: 18px;
+      margin: 14px 0 0;
+      color: var(--muted);
+    }
+
+    footer {
+      padding: 28px 0 50px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      color: var(--muted);
+    }
+
+    .hidden { display: none !important; }
+
+    .board-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 8px;
+    }
+
+    .board-post {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 18px 22px;
+      align-items: start;
+      padding: 22px 24px;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.04));
+      border: 1px solid var(--line);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+      transition: 0.2s ease;
+    }
+
+    .board-post:hover {
+      border-color: rgba(125,211,252,0.22);
+    }
+
+    .board-post__aside {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      min-width: 72px;
+    }
+
+    .board-post__no {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--point);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .board-post__section {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--muted);
+      line-height: 1.35;
+      max-width: 120px;
+    }
+
+    .board-post__body h3 {
+      font-size: 1.15rem;
+      margin: 0 0 10px;
+      line-height: 1.4;
+    }
+
+    .board-post__body .board-lead {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.65;
+    }
+
+    @media (max-width: 720px) {
+      .board-post {
+        grid-template-columns: 1fr;
+      }
+      .board-post__aside {
+        flex-direction: row;
+        align-items: center;
+        max-width: none;
+      }
+    }
+
+    @media (max-width: 1100px) {
+      .hero-box,
+      .notice-box,
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .process {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .filters { justify-content: flex-start; }
+    }
+
+    @media (max-width: 720px) {
+      .wrap { width: min(var(--wrap), calc(100% - 24px)); }
+      .topbar-inner { flex-direction: column; align-items: flex-start; }
+      .hero { padding-top: 52px; }
+      .hero-copy, .hero-side, .card, .notice, .company { padding: 22px; }
+      .grid,
+      .process,
+      .mini-stats {
+        grid-template-columns: 1fr;
+      }
+      .gnb { gap: 8px; }
+      .gnb a { font-size: 0.86rem; padding: 9px 12px; }
+    }
+  </style>
+  <link rel="stylesheet" href="dept-shared.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <div class="brand">
+        <strong>주식회사 누리온홀딩스</strong>
+        <span>5개 사업부 공통 연결형 정책·공시 자료실</span>
+      </div>
+      <nav class="gnb">
+        <a href="consulting.html">기업컨설팅</a>
+        <a href="news.html">인터넷신문사</a>
+        <a href="edocs.html">전자문서·운영문서</a>
+        <a href="software.html">소프트웨어·플랫폼</a>
+        <a href="solar.html">태양광사업</a>
+        <a href="resources.html" class="active">자료실</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap hero-box">
+        <div class="hero-copy">
+          <span class="eyebrow">NURION HOLDINGS RESOURCE CENTER</span>
+          <h1>정책·공시 중심으로<br />사업부별 지식을 연결하는 자료실</h1>
+          <p>
+            누리온홀딩스 자료실은 단순 파일 보관용 페이지가 아니라, 각 사업부와 연결되는 정부 정책,
+            공시, 시장 변화, 인허가 절차, 지원제도, 우수사례를 구조적으로 정리하는 지식형 허브입니다.
+            실무 담당자와 협력 대상자가 빠르게 흐름을 이해하고 검토할 수 있도록 정책형 콘텐츠 중심으로 구성합니다.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#library">자료 보기</a>
+            <a class="btn btn-secondary" href="#request">자료 요청 안내</a>
+          </div>
+        </div>
+        <div class="hero-side">
+          <h2 style="font-size:1.5rem;">자료실 운영 방향</h2>
+          <p style="margin-top:12px; color:var(--muted);">
+            본 자료실은 정부정책·공시·절차·시장동향·우수사례를 각 사업부 관점에서 연결하여,
+            방문자가 단순 소개를 넘어서 실제 판단에 필요한 배경지식을 확보할 수 있도록 설계합니다.
+          </p>
+          <div class="mini-stats">
+            <div class="mini-card">
+              <strong>5개 사업부</strong>
+              <span>공통 연결 구조 적용</span>
+            </div>
+            <div class="mini-card">
+              <strong>정책·공시 중심</strong>
+              <span>실무 판단용 정보 정리</span>
+            </div>
+            <div class="mini-card">
+              <strong>사업부 연계형</strong>
+              <span>분야별 해석과 사례 연결</span>
+            </div>
+            <div class="mini-card">
+              <strong>지식 축적형</strong>
+              <span>정책 변화 지속 반영 가능</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="library">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">POLICY &amp; KNOWLEDGE LIBRARY</span>
+            <h2 style="margin-top:16px; font-size:2rem;">주요 자료 주제</h2>
+            <p>
+              자료실의 핵심은 정부 정책, 공시, 제도 변화, 산업 흐름, 지역 우수사례를 사업부별로 해석해 제공하는 것입니다.
+              아래 주제 구조를 기준으로 정책형 콘텐츠를 축적하면 어느 사업부에서 들어오더라도 필요한 배경지식을 빠르게 찾을 수 있습니다.
+            </p>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="search-box">
+            <input id="searchInput" type="text" placeholder="주제명, 정책명, 사업부명, 지역명으로 검색해보세요." />
+          </div>
+          <div class="filters">
+            <button type="button" class="chip active" data-filter="all">전체</button>
+            <button type="button" class="chip" data-filter="software">소프트웨어</button>
+            <button type="button" class="chip" data-filter="solar">태양광</button>
+            <button type="button" class="chip" data-filter="ai-energy">AI·전기에너지</button>
+            <button type="button" class="chip" data-filter="policy">정부정책·지원</button>
+            <button type="button" class="chip" data-filter="case">우수사례</button>
+            <button type="button" class="chip" data-filter="local">지역별</button>
+          </div>
+        </div>
+
+        <div class="grid" id="resourceGrid">
+          <article class="card filter-item" data-category="software policy public">
+            <div class="badge-row">
+              <span class="badge">소프트웨어</span>
+              <span class="badge">정부정책·지원</span>
+            </div>
+            <h3>소프트웨어 동향 및 플랫폼 시장 변화</h3>
+            <p>국내외 플랫폼 시장 재편, SaaS 확산, 3D·AI 기반 웹 구축 수요, 산업별 디지털 전환 흐름을 정리하는 핵심 주제입니다.</p>
+            <div class="meta">
+              <div>핵심 내용: 산업 동향 / 플랫폼 경쟁 구조 / 수요 변화</div>
+              <div>연계 사업부: 소프트웨어·플랫폼 / 기업컨설팅</div>
+              <div><strong>운영 방향: 정기 업데이트형 정책·시장 해설</strong></div>
+            </div>
+            <div class="card-actions">
+              <a href="software.html" class="btn-sm">사업부 보기</a>
+              <a href="#request" class="btn-sm primary">자료 주제 확장</a>
+            </div>
+          </article>
+
+          <article class="card filter-item" data-category="software policy public">
+            <div class="badge-row">
+              <span class="badge">소프트웨어</span>
+              <span class="badge">정부정책·지원</span>
+            </div>
+            <h3>소프트웨어 관련 정부정책 및 지원사업</h3>
+            <p>중소기업 디지털 전환, AI 바우처, 플랫폼 구축 지원, 창업 및 기술사업화 정책 등 정부 지원 구조를 정리하는 자료입니다.</p>
+            <div class="meta">
+              <div>핵심 내용: 정부 사업 / 지원금 / 제도 변화 / 공고 흐름</div>
+              <div>연계 사업부: 소프트웨어·플랫폼 / 기업컨설팅</div>
+              <div><strong>운영 방향: 공고·정책 요약형 자료실</strong></div>
+            </div>
+            <div class="card-actions">
+              <a href="software.html" class="btn-sm">사업부 보기</a>
+              <a href="#request" class="btn-sm primary">자료 주제 확장</a>
+            </div>
+          </article>
+
+          <article class="card filter-item" data-category="solar policy local public">
+            <div class="badge-row">
+              <span class="badge">태양광</span>
+              <span class="badge">지역별</span>
+            </div>
+            <h3>태양광 인허가 절차 정리</h3>
+            <p>태양광 사업 검토 시 필요한 인허가 흐름, 단계별 준비 문서, 협의 기관, 실무상 주의사항을 체계적으로 정리하는 핵심 자료입니다.</p>
+            <div class="meta">
+              <div>핵심 내용: 입지 검토 / 인허가 / 접수 절차 / 문서 준비</div>
+              <div>연계 사업부: 태양광사업 / 전자문서·운영문서</div>
+              <div><strong>운영 방향: 기본 절차 + 지역별 세부 비교</strong></div>
+            </div>
+            <div class="card-actions">
+              <a href="solar.html" class="btn-sm">사업부 보기</a>
+              <a href="#request" class="btn-sm primary">자료 주제 확장</a>
+            </div>
+          </article>
+
+          <article class="card filter-item" data-category="solar local public">
+            <div class="badge-row">
+              <span class="badge">태양광</span>
+              <span class="badge">지역별</span>
+            </div>
+            <h3>각 지자체별 태양광 인허가 구분 자료</h3>
+            <p>지자체마다 달라질 수 있는 조례, 개발행위 검토 기준, 민원 대응 포인트, 협의 부서를 비교 정리하는 지역형 자료입니다.</p>
+            <div class="meta">
+              <div>핵심 내용: 지자체별 차이 / 조례 / 민원 요소 / 실무 구분</div>
+              <div>연계 사업부: 태양광사업 / 기업컨설팅</div>
+              <div><strong>운영 방향: 지역별 표준 비교형 콘텐츠</strong></div>
+            </div>
+            <div class="card-actions">
+              <a href="solar.html" class="btn-sm">사업부 보기</a>
+              <a href="#request" class="btn-sm primary">자료 주제 확장</a>
+            </div>
+          </article>
+
+          <article class="card filter-item" data-category="ai-energy policy public">
+            <div class="badge-row">
+              <span class="badge">AI·전기에너지</span>
+              <span class="badge">정책해설</span>
+            </div>
+            <h3>AI와 전기의 연관성</h3>
+            <p>AI 산업 확장에 따른 전력 수요 증가, 데이터센터, 전력망, 재생에너지, RE100과의 연결 구조를 설명하는 융합형 자료입니다.</p>
+            <div class="meta">
+              <div>핵심 내용: AI 전력소비 / 데이터센터 / 재생에너지 수요</div>
+              <div>연계 사업부: 소프트웨어·플랫폼 / 태양광사업</div>
+              <div><strong>운영 방향: 산업 연결형 인사이트 자료</strong></div>
+            </div>
+            <div class="card-actions">
+              <a href="software.html" class="btn-sm">소프트웨어 보기</a>
+              <a href="#request" class="btn-sm primary">자료 주제 확장</a>
+            </div>
+          </article>
+
+          <article class="card filter-item" data-category="case consulting news edocs software solar public">
+            <div class="badge-row">
+              <span class="badge">우수사례</span>
+              <span class="badge">사업부 공통</span>
+            </div>
+            <h3>각 지역 및 단체의 우수사례</h3>
+            <p>지자체, 협동조합, 기업, 단체의 실제 운영사례 중 정책 활용도와 사업 확장성이 높은 사례를 사업부별로 분류해 정리합니다.</p>
+            <div class="meta">
+              <div>핵심 내용: 지역별 성공사례 / 단체 운영사례 / 정책 활용사례</div>
+              <div>연계 사업부: 전체 사업부 공통</div>
+              <div><strong>운영 방향: 사례 아카이브형 자료 구조</strong></div>
+            </div>
+            <div class="card-actions">
+              <a href="consulting.html" class="btn-sm">컨설팅 보기</a>
+              <a href="#request" class="btn-sm primary">자료 주제 확장</a>
+            </div>
+          </article>
+
+          <article class="card filter-item" data-category="consulting case policy public">
+            <div class="badge-row">
+              <span class="badge">기업컨설팅</span>
+              <span class="badge">우수사례</span>
+            </div>
+            <h3>정책 활용형 기업 성장 사례</h3>
+            <p>정부 지원, 제도 활용, 구조 개선을 통해 사업 방향을 확장한 기업 사례를 분석형 콘텐츠로 축적합니다.</p>
+            <div class="meta">
+              <div>핵심 내용: 정책 연계 / 조직 개선 / 사업확장 사례</div>
+              <div>연계 사업부: 기업컨설팅</div>
+              <div><strong>운영 방향: 의사결정 참고용 사례 정리</strong></div>
+            </div>
+            <div class="card-actions">
+              <a href="consulting.html" class="btn-sm">사업부 보기</a>
+              <a href="#request" class="btn-sm primary">자료 주제 확장</a>
+            </div>
+          </article>
+
+          <article class="card filter-item" data-category="news case public">
+            <div class="badge-row">
+              <span class="badge">인터넷신문사</span>
+              <span class="badge">우수사례</span>
+            </div>
+            <h3>지역·산업 매체 운영 우수사례</h3>
+            <p>전문매체, 지역매체, 산업형 뉴스플랫폼이 어떤 구조로 성장하고 광고·보도·제휴를 운영하는지 비교 정리합니다.</p>
+            <div class="meta">
+              <div>핵심 내용: 매체 수익구조 / 광고 운영 / 보도 신뢰도</div>
+              <div>연계 사업부: 인터넷신문사</div>
+              <div><strong>운영 방향: 매체 운영 전략 참고자료</strong></div>
+            </div>
+            <div class="card-actions">
+              <a href="news.html" class="btn-sm">사업부 보기</a>
+              <a href="#request" class="btn-sm primary">자료 주제 확장</a>
+            </div>
+          </article>
+
+          <article class="card filter-item" data-category="edocs case public">
+            <div class="badge-row">
+              <span class="badge">전자문서·운영문서</span>
+              <span class="badge">우수사례</span>
+            </div>
+            <h3>운영문서 체계화 우수사례</h3>
+            <p>문서정리, 웹문서 운영, PM 관련 문서 체계화로 업무 효율을 높인 실제 운영사례를 누적 정리하는 영역입니다.</p>
+            <div class="meta">
+              <div>핵심 내용: 문서 표준화 / 관리 체계 / 운영 효율 개선</div>
+              <div>연계 사업부: 전자문서·운영문서</div>
+              <div><strong>운영 방향: 문서 운영 모델 축적</strong></div>
+            </div>
+            <div class="card-actions">
+              <a href="edocs.html" class="btn-sm">사업부 보기</a>
+              <a href="#request" class="btn-sm primary">자료 주제 확장</a>
+            </div>
+          </article>
+        </div>
+
+        <div class="section-head" style="margin-top:48px;">
+          <div>
+            <span class="eyebrow">BOARD · 게시글 1–20</span>
+            <h2 style="margin-top:16px; font-size:2rem;">게시글 자료</h2>
+            <p>
+              정책·시장·인허가·에너지·우수사례를 제목·설명문 형태로 정리한 선행 20건입니다.
+              상단 검색·분류 칩과 동일하게 연동됩니다.
+            </p>
+          </div>
+        </div>
+
+        <div class="board-list" id="boardGrid" aria-label="게시글 목록">
+          <article class="board-post filter-item" data-category="software policy">
+            <div class="board-post__aside">
+              <span class="board-post__no">01</span>
+              <span class="board-post__section">소프트웨어·플랫폼 시장</span>
+            </div>
+            <div class="board-post__body">
+              <h3>2026 소프트웨어 산업 동향과 플랫폼 시장 재편 흐름</h3>
+              <p class="board-lead">국내외 소프트웨어 산업이 어떤 방향으로 이동하고 있는지, 플랫폼 중심 경쟁 구조가 어떻게 바뀌고 있는지 정리한 자료입니다. SaaS, AI 결합형 서비스, 구독형 비즈니스, 3D·인터랙티브 웹 기술 등 최근 시장 변화의 큰 흐름을 이해하는 데 도움이 됩니다.</p>
+            </div>
+          </article>
+
+          <article class="board-post filter-item" data-category="software">
+            <div class="board-post__aside">
+              <span class="board-post__no">02</span>
+              <span class="board-post__section">소프트웨어·플랫폼 시장</span>
+            </div>
+            <div class="board-post__body">
+              <h3>홈페이지 제작을 넘어 플랫폼 구축으로 이동하는 이유</h3>
+              <p class="board-lead">기존의 단순 홍보형 홈페이지에서 벗어나, 회원관리·예약·결제·콘텐츠 운영이 가능한 플랫폼형 구축으로 수요가 이동하는 이유를 설명합니다. 기업이 왜 이제는 웹사이트가 아니라 운영 가능한 디지털 구조를 원하게 되었는지 실무 중심으로 정리했습니다.</p>
+            </div>
+          </article>
+
+          <article class="board-post filter-item" data-category="software policy">
+            <div class="board-post__aside">
+              <span class="board-post__no">03</span>
+              <span class="board-post__section">소프트웨어·플랫폼 시장</span>
+            </div>
+            <div class="board-post__body">
+              <h3>AI 도입 이후 중소기업 소프트웨어 수요는 어떻게 달라지는가</h3>
+              <p class="board-lead">AI 기술 확산 이후 중소기업이 필요로 하는 소프트웨어의 유형과 기능 변화에 대해 설명합니다. 자동화, 고객응대, 데이터 정리, 의사결정 보조, 콘텐츠 생성 등 실제 현장에서 요구되는 변화 흐름을 파악할 수 있습니다.</p>
+            </div>
+          </article>
+
+          <article class="board-post filter-item" data-category="software">
+            <div class="board-post__aside">
+              <span class="board-post__no">04</span>
+              <span class="board-post__section">소프트웨어·플랫폼 시장</span>
+            </div>
+            <div class="board-post__body">
+              <h3>3D 기반 홈페이지와 일반 홈페이지의 차이점</h3>
+              <p class="board-lead">일반적인 정보 전달형 홈페이지와 3D 기반 디지털 공간형 홈페이지의 차이를 비교한 자료입니다. 기업 브랜딩, 몰입감, 체류시간, 상담 연결성 측면에서 어떤 차별점이 있는지 쉽게 이해할 수 있도록 정리했습니다.</p>
+            </div>
+          </article>
+
+          <article class="board-post filter-item" data-category="policy">
+            <div class="board-post__aside">
+              <span class="board-post__no">05</span>
+              <span class="board-post__section">정부 지원·정책·공시</span>
+            </div>
+            <div class="board-post__body">
+              <h3>소프트웨어·플랫폼 구축 관련 정부 지원사업 한눈에 보기</h3>
+              <p class="board-lead">정부 및 공공기관에서 제공하는 디지털 전환, 소프트웨어 개발, 플랫폼 구축, AI 활용 관련 지원사업의 기본 구조를 이해할 수 있도록 정리한 자료입니다. 기업이 어떤 방향으로 지원사업을 검토해야 하는지 큰 틀을 제공합니다.</p>
+            </div>
+          </article>
+
+          <article class="board-post filter-item" data-category="policy">
+            <div class="board-post__aside">
+              <span class="board-post__no">06</span>
+              <span class="board-post__section">정부 지원·정책·공시</span>
+            </div>
+            <div class="board-post__body">
+              <h3>중소기업 디지털 전환 정책의 핵심과 실제 활용 방향</h3>
+              <p class="board-lead">정부가 추진하는 디지털 전환 정책이 중소기업에 어떤 의미를 가지는지, 그리고 실제 사업 현장에서는 어떤 방식으로 연결해볼 수 있는지 설명합니다. 홈페이지, 플랫폼, 데이터관리, 내부 업무 체계화와의 연관성도 함께 다룹니다.</p>
+            </div>
+          </article>
+
+          <article class="board-post filter-item" data-category="policy ai-energy">
+            <div class="board-post__aside">
+              <span class="board-post__no">07</span>
+              <span class="board-post__section">정부 지원·정책·공시</span>
+            </div>
+            <div class="board-post__body">
+              <h3>AI 관련 정부정책과 지원제도는 어디까지 확대되고 있는가</h3>
+              <p class="board-lead">AI 산업 육성 정책, 기업 활용 지원, AI 바우처, 실증사업 등 정부가 추진하는 여러 지원 흐름을 정리합니다. AI가 단순 기술 소개를 넘어 실제 산업 지원 정책으로 어떻게 연결되고 있는지 이해하는 데 초점을 둡니다.</p>
+            </div>
+          </article>
+
+          <article class="board-post filter-item" data-category="policy">
+            <div class="board-post__aside">
+              <span class="board-post__no">08</span>
+              <span class="board-post__section">정부 지원·정책·공시</span>
+            </div>
+            <div class="board-post__body">
+              <h3>정부 공시자료를 읽는 방법과 사업 판단에 활용하는 법</h3>
+              <p class="board-lead">공시자료와 정책자료를 단순 참고가 아니라 실제 사업 판단 자료로 읽는 방법을 설명합니다. 지원사업, 제도 변화, 시장 방향성, 정책 우선순위를 해석하는 기본 틀을 제공하는 실무형 입문 자료입니다.</p>
+            </div>
+          </article>
+
+          <article class="board-post filter-item" data-category="solar">
+            <div class="board-post__aside">
+              <span class="board-post__no">09</span>
+              <span class="board-post__section">태양광 인허가·절차</span>
+            </div>
+            <div class="board-post__body">
+              <h3>태양광 사업 추진 전 반드시 알아야 할 기본 인허가 절차</h3>
+              <p class="board-lead">태양광 사업을 검토할 때 처음부터 끝까지 어떤 인허가 흐름을 거치는지 개괄적으로 정리한 자료입니다. 입지 검토, 행정 확인, 관련 서류 준비, 협의 절차 등 실무자가 큰 그림을 잡는 데 적합한 내용으로 구성합니다.</p>
+            </div>
+          </article>
+
+          <article class="board-post filter-item" data-category="solar local">
+            <div class="board-post__aside">
+              <span class="board-post__no">10</span>
+              <span class="board-post__section">태양광 인허가·절차</span>
+            </div>
+            <div class="board-post__body">
+              <h3>지붕형 태양광 인허가 절차와 준비 서류 정리</h3>
+              <p class="board-lead">지붕형 태양광 사업을 기준으로 실제 검토 시 필요한 절차와 준비 문서의 방향을 정리한 자료입니다. 공장, 창고, 건물 옥상 등 적용 대상을 중심으로 실무상 자주 확인되는 요소를 쉽게 설명합니다.</p>
+            </div>
+          </article>
+
+          <article class="board-post filter-item" data-category="solar">
+            <div class="board-post__aside">
+              <span class="board-post__no">11</span>
+              <span class="board-post__section">태양광 인허가·절차</span>
+            </div>
+            <div class="board-post__body">
+              <h3>영농형 태양광 검토 시 꼭 확인해야 할 사항</h3>
+              <p class="board-lead">영농형 태양광은 일반 태양광보다 검토 요소가 더 많기 때문에 사전 확인이 중요합니다. 농지 관련 사항, 운영 방식, 제도 변화, 현장 검토 포인트 등을 중심으로 기본 이해를 돕는 자료입니다.</p>
+            </div>
+          </article>
+
+          <article class="board-post filter-item" data-category="solar policy local">
+            <div class="board-post__aside">
+              <span class="board-post__no">12</span>
+              <span class="board-post__section">태양광 인허가·절차</span>
+            </div>
+            <div class="board-post__body">
+              <h3>주민참여형 태양광과 협동조합 방식의 구조 이해</h3>
+              <p class="board-lead">주민참여형 태양광과 협동조합 연계형 사업이 어떤 구조로 운영될 수 있는지 설명합니다. 지역 주민 참여, 수익 공유, 사업 추진 구조, 문서 준비와의 연관성을 함께 정리해 사업 구상 단계에서 참고할 수 있도록 구성했습니다.</p>
+            </div>
+          </article>
+
+          <article class="board-post filter-item" data-category="solar local">
+            <div class="board-post__aside">
+              <span class="board-post__no">13</span>
+              <span class="board-post__section">태양광 인허가·절차</span>
+            </div>
+            <div class="board-post__body">
+              <h3>지자체마다 다른 태양광 인허가 기준, 왜 차이가 나는가</h3>
+              <p class="board-lead">태양광 인허가가 지역마다 다르게 느껴지는 이유를 조례, 행정 해석, 민원 환경, 입지 조건 등의 관점에서 설명하는 자료입니다. 전국 공통 제도와 지역별 차이를 함께 이해하는 데 목적이 있습니다.</p>
+            </div>
+          </article>
+
+          <article class="board-post filter-item" data-category="solar policy">
+            <div class="board-post__aside">
+              <span class="board-post__no">14</span>
+              <span class="board-post__section">태양광 인허가·절차</span>
+            </div>
+            <div class="board-post__body">
+              <h3>태양광 사업에서 문서 정리와 PM 관리가 중요한 이유</h3>
+              <p class="board-lead">태양광 사업은 단순 시공만으로 끝나는 것이 아니라, 검토 문서와 절차 관리가 사업 성패에 큰 영향을 줍니다. 인허가, 협의, 일정, 이해관계자 조율 과정에서 문서와 PM이 어떤 역할을 하는지 실무적으로 설명합니다.</p>
+            </div>
+          </article>
+
+          <article class="board-post filter-item" data-category="ai-energy">
+            <div class="board-post__aside">
+              <span class="board-post__no">15</span>
+              <span class="board-post__section">AI·전기·에너지</span>
+            </div>
+            <div class="board-post__body">
+              <h3>AI 산업이 커질수록 전기 수요가 늘어나는 이유</h3>
+              <p class="board-lead">AI 기술의 확산이 왜 전력 사용량 증가와 연결되는지 설명하는 자료입니다. 연산 자원, 데이터 처리, 서버 운영, 인프라 확대가 전력 수요와 어떤 관계를 가지는지 쉽게 풀어 정리합니다.</p>
+            </div>
+          </article>
+
+          <article class="board-post filter-item" data-category="ai-energy">
+            <div class="board-post__aside">
+              <span class="board-post__no">16</span>
+              <span class="board-post__section">AI·전기·에너지</span>
+            </div>
+            <div class="board-post__body">
+              <h3>데이터센터 확대와 재생에너지 수요의 연결 구조</h3>
+              <p class="board-lead">AI와 클라우드 산업이 커질수록 데이터센터와 전력 인프라의 중요성이 커집니다. 이 자료는 데이터센터 확대가 왜 재생에너지, 전력 안정성, 장기 에너지 전략과 연결되는지 설명합니다.</p>
+            </div>
+          </article>
+
+          <article class="board-post filter-item" data-category="policy solar">
+            <div class="board-post__aside">
+              <span class="board-post__no">17</span>
+              <span class="board-post__section">AI·전기·에너지</span>
+            </div>
+            <div class="board-post__body">
+              <h3>RE100과 탄소중립이 기업 경영에 주는 실제 의미</h3>
+              <p class="board-lead">RE100과 탄소중립이 단지 대기업의 선언이 아니라, 앞으로는 다양한 기업의 사업 방향과 공급망에도 영향을 줄 수 있음을 설명하는 자료입니다. 에너지 전략, 브랜드 신뢰, 정책 대응 측면을 함께 다룹니다.</p>
+            </div>
+          </article>
+
+          <article class="board-post filter-item" data-category="case software">
+            <div class="board-post__aside">
+              <span class="board-post__no">18</span>
+              <span class="board-post__section">지역·단체·우수사례</span>
+            </div>
+            <div class="board-post__body">
+              <h3>지역 기반 산업 플랫폼의 우수사례와 성장 포인트</h3>
+              <p class="board-lead">특정 지역이나 산업을 중심으로 성장한 플랫폼 사례를 분석해, 왜 해당 플랫폼이 사용자와 시장을 연결할 수 있었는지 살펴보는 자료입니다. 누리온홀딩스의 플랫폼 구축 사업과 연결해 참고할 수 있는 방향을 제시합니다.</p>
+            </div>
+          </article>
+
+          <article class="board-post filter-item" data-category="case news">
+            <div class="board-post__aside">
+              <span class="board-post__no">19</span>
+              <span class="board-post__section">지역·단체·우수사례</span>
+            </div>
+            <div class="board-post__body">
+              <h3>지역 전문매체 운영 우수사례와 수익구조 분석</h3>
+              <p class="board-lead">지역성 또는 산업 전문성을 기반으로 운영되는 인터넷신문·온라인 매체의 우수사례를 정리한 자료입니다. 광고, 기사형 콘텐츠, 협찬, 제휴 운영 등 실제 수익구조와 운영 방식의 특징을 분석합니다.</p>
+            </div>
+          </article>
+
+          <article class="board-post filter-item" data-category="case edocs">
+            <div class="board-post__aside">
+              <span class="board-post__no">20</span>
+              <span class="board-post__section">지역·단체·우수사례</span>
+            </div>
+            <div class="board-post__body">
+              <h3>문서체계화와 운영 효율 개선에 성공한 단체 사례</h3>
+              <p class="board-lead">운영문서, 협의문서, 웹문서, 내부 정리체계를 잘 구축하여 업무 효율을 높인 단체 또는 조직 사례를 다룹니다. 전자문서·운영문서 사업부와 연결되는 실무형 참고자료로 활용할 수 있습니다.</p>
+            </div>
+          </article>
+        </div>
+
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">HOW TO BUILD THE LIBRARY</span>
+            <h2 style="margin-top:16px; font-size:2rem;">자료실 구축 방식</h2>
+            <p>기획 방향에 따라 이 자료실은 다운로드 창고가 아니라, 정책과 공시를 기반으로 실무 판단에 필요한 내용을 주제별로 축적하는 구조가 되어야 합니다.</p>
+          </div>
+        </div>
+        <div class="process">
+          <div class="step">
+            <div class="num">01</div>
+            <h3 style="font-size:1.12rem;">정책 주제 선정</h3>
+            <p style="margin:10px 0 0; color:var(--muted);">소프트웨어, 태양광, AI·전기, 지역사례 등 핵심 주제를 먼저 분류합니다.</p>
+          </div>
+          <div class="step">
+            <div class="num">02</div>
+            <h3 style="font-size:1.12rem;">정부자료 정리</h3>
+            <p style="margin:10px 0 0; color:var(--muted);">정부정책, 공시, 지원사업, 인허가 절차를 사업부 관점으로 재정리합니다.</p>
+          </div>
+          <div class="step">
+            <div class="num">03</div>
+            <h3 style="font-size:1.12rem;">지역·사례 연결</h3>
+            <p style="margin:10px 0 0; color:var(--muted);">지자체별 차이와 우수사례를 함께 배치해 실무 이해도를 높입니다.</p>
+          </div>
+          <div class="step">
+            <div class="num">04</div>
+            <h3 style="font-size:1.12rem;">사업 상담 연계</h3>
+            <p style="margin:10px 0 0; color:var(--muted);">정리된 자료를 각 사업부 상담과 자연스럽게 이어지도록 연결합니다.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="request">
+      <div class="wrap notice-box">
+        <div class="notice">
+          <span class="eyebrow">CONTENT DIRECTION</span>
+          <h2 style="margin-top:16px; font-size:1.8rem;">자료실 핵심 편성 방향</h2>
+          <ul>
+            <li>정부 정책과 공시를 단순 나열하지 않고 사업부별 해설형 콘텐츠로 재구성합니다.</li>
+            <li>소프트웨어와 플랫폼 시장 변화는 정부 지원제도와 함께 연결해 해석합니다.</li>
+            <li>태양광 분야는 인허가 절차를 기본형과 지자체별 구분형으로 이중 구조화합니다.</li>
+            <li>AI와 전기의 연관성은 데이터센터, 전력수요, RE100, 재생에너지 흐름과 함께 설명합니다.</li>
+            <li>각 지역 및 단체의 우수사례는 사업부별로 분류해 누적형 아카이브로 운영합니다.</li>
+          </ul>
+          <div class="hero-actions" style="margin-top:22px;">
+            <a class="btn btn-primary" href="tel:01059455925">자료실 문의</a>
+            <a class="btn btn-secondary" href="mailto:aibrew@naver.com">주제 제안</a>
+          </div>
+        </div>
+
+        <div class="company">
+          <span class="eyebrow">COMPANY INFO</span>
+          <h2 style="margin-top:16px; font-size:1.8rem;">법인 정보</h2>
+          <ul>
+            <li>상호명: 주식회사 누리온홀딩스</li>
+            <li>대표이사: 최인석</li>
+            <li>사업자등록번호: 702-86-03510</li>
+            <li>연락처: 010-5945-5925</li>
+            <li>이메일: aibrew@naver.com</li>
+            <li>주소: 세종특별자치시 집현중앙7로 6</li>
+          </ul>
+          <p style="margin:18px 0 0; color:var(--muted);">
+            본 자료실은 누리온홀딩스 각 사업부 페이지에서 동일하게 연결되는 공통 지식 허브로 운영할 수 있으며,
+            향후에는 정부정책 요약, 공시 아카이브, 지자체별 태양광 인허가 데이터, 사업부별 우수사례 모음까지 단계적으로 확장할 수 있습니다.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      © NURION HOLDINGS. All rights reserved.
+    </div>
+  </footer>
+
+  <script>
+    const chips = document.querySelectorAll('.chip');
+    const cards = document.querySelectorAll('.filter-item');
+    const searchInput = document.getElementById('searchInput');
+
+    let currentFilter = 'all';
+
+    function applyFilter() {
+      const keyword = searchInput.value.trim().toLowerCase();
+
+      cards.forEach(card => {
+        const category = card.dataset.category.toLowerCase();
+        const text = card.innerText.toLowerCase();
+
+        const matchesFilter = currentFilter === 'all'
+          ? true
+          : category.includes(currentFilter);
+
+        const matchesKeyword = keyword === ''
+          ? true
+          : text.includes(keyword);
+
+        card.classList.toggle('hidden', !(matchesFilter && matchesKeyword));
+      });
+    }
+
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        chips.forEach(btn => btn.classList.remove('active'));
+        chip.classList.add('active');
+        currentFilter = chip.dataset.filter;
+        applyFilter();
+      });
+    });
+
+    searchInput.addEventListener('input', applyFilter);
+  </script>
+</body>
+</html>

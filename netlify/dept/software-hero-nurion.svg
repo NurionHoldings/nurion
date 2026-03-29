@@ -1,0 +1,83 @@
+<svg width="1600" height="1000" viewBox="0 0 1600 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="1000" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#08131A"/>
+      <stop offset="1" stop-color="#0C1F18"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1200 170) rotate(90) scale(300 500)">
+      <stop stop-color="#00D28A" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#00D28A" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(350 220) rotate(90) scale(260 420)">
+      <stop stop-color="#7CFFE5" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#7CFFE5" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#142631" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#0C171D" stop-opacity="0.95"/>
+    </linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#00D28A"/>
+      <stop offset="1" stop-color="#68FFD0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1600" height="1000" fill="url(#bg)"/>
+  <rect width="1600" height="1000" fill="url(#glow1)"/>
+  <rect width="1600" height="1000" fill="url(#glow2)"/>
+
+  <g opacity="0.18" stroke="#D7FFF4">
+    <path d="M80 130H720"/>
+    <path d="M80 180H610"/>
+    <path d="M80 230H550"/>
+    <path d="M80 280H460"/>
+    <path d="M80 330H520"/>
+    <path d="M80 380H680"/>
+  </g>
+
+  <g transform="translate(90 120)">
+    <text x="0" y="0" fill="#EFFFF9" font-size="28" font-family="Pretendard, Arial, sans-serif" opacity="0.82">NURION HOLDINGS</text>
+    <text x="0" y="88" fill="#FFFFFF" font-size="74" font-weight="700" font-family="Pretendard, Arial, sans-serif">디지털 구축 · 응용 소프트웨어 개발</text>
+    <text x="0" y="152" fill="#C4EADF" font-size="30" font-family="Pretendard, Arial, sans-serif">홈페이지 · 플랫폼 · Add-on · 인터넷신문사 · 3D 웹 구축</text>
+  </g>
+
+  <g transform="translate(80 480)">
+    <rect x="0" y="0" rx="28" ry="28" width="360" height="180" fill="url(#card)" stroke="rgba(255,255,255,0.14)"/>
+    <rect x="390" y="0" rx="28" ry="28" width="360" height="180" fill="url(#card)" stroke="rgba(255,255,255,0.14)"/>
+    <rect x="780" y="0" rx="28" ry="28" width="360" height="180" fill="url(#card)" stroke="rgba(255,255,255,0.14)"/>
+    <rect x="1170" y="0" rx="28" ry="28" width="300" height="180" fill="url(#card)" stroke="rgba(255,255,255,0.14)"/>
+
+    <circle cx="52" cy="48" r="18" fill="url(#green)"/>
+    <circle cx="442" cy="48" r="18" fill="url(#green)"/>
+    <circle cx="832" cy="48" r="18" fill="url(#green)"/>
+    <circle cx="1222" cy="48" r="18" fill="url(#green)"/>
+
+    <text x="84" y="56" fill="#FFFFFF" font-size="30" font-weight="700" font-family="Pretendard, Arial, sans-serif">기본 홈페이지</text>
+    <text x="474" y="56" fill="#FFFFFF" font-size="30" font-weight="700" font-family="Pretendard, Arial, sans-serif">플랫폼 · Add-on</text>
+    <text x="864" y="56" fill="#FFFFFF" font-size="30" font-weight="700" font-family="Pretendard, Arial, sans-serif">인터넷신문사 구축</text>
+    <text x="1254" y="56" fill="#FFFFFF" font-size="30" font-weight="700" font-family="Pretendard, Arial, sans-serif">3D 웹</text>
+
+    <text x="30" y="106" fill="#CBE8DF" font-size="22" font-family="Pretendard, Arial, sans-serif">기업/브랜드/서비스 소개형</text>
+    <text x="30" y="138" fill="#CBE8DF" font-size="22" font-family="Pretendard, Arial, sans-serif">상담 유입 · 관리자 수정 구조</text>
+
+    <text x="420" y="106" fill="#CBE8DF" font-size="22" font-family="Pretendard, Arial, sans-serif">회원 · 관리자 · 결제 · 데이터</text>
+    <text x="420" y="138" fill="#CBE8DF" font-size="22" font-family="Pretendard, Arial, sans-serif">기존 기능 확장 모듈 개발</text>
+
+    <text x="810" y="106" fill="#CBE8DF" font-size="22" font-family="Pretendard, Arial, sans-serif">기사 구조 · 광고 동선 · 인허가 준비</text>
+    <text x="810" y="138" fill="#CBE8DF" font-size="22" font-family="Pretendard, Arial, sans-serif">콘텐츠형 매체 운영 설계</text>
+
+    <text x="1200" y="106" fill="#CBE8DF" font-size="22" font-family="Pretendard, Arial, sans-serif">공간형 진입</text>
+    <text x="1200" y="138" fill="#CBE8DF" font-size="22" font-family="Pretendard, Arial, sans-serif">몰입형 UX</text>
+  </g>
+
+  <g transform="translate(980 160)">
+    <rect x="0" y="0" width="470" height="240" rx="30" fill="#0F1B20" stroke="#2DE6A8" stroke-opacity="0.35"/>
+    <rect x="28" y="28" width="414" height="26" rx="13" fill="#1B3235"/>
+    <rect x="28" y="76" width="220" height="16" rx="8" fill="#2DE6A8" fill-opacity="0.86"/>
+    <rect x="28" y="108" width="320" height="14" rx="7" fill="#274247"/>
+    <rect x="28" y="134" width="380" height="14" rx="7" fill="#274247"/>
+    <rect x="28" y="160" width="290" height="14" rx="7" fill="#274247"/>
+    <rect x="28" y="194" width="96" height="24" rx="12" fill="#00D28A"/>
+    <rect x="136" y="194" width="120" height="24" rx="12" fill="#183A37"/>
+  </g>
+</svg>
