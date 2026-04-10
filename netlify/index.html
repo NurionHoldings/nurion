@@ -149,8 +149,42 @@
     #deskModal .card b{ display:block; margin-bottom: 6px; }
     #deskModal .foot{
       padding: 14px 18px;
-      display:flex; gap:10px; justify-content:flex-end;
+      display:flex; flex-direction:column; gap:12px; align-items:stretch;
       border-top: 1px solid rgba(255,255,255,0.12);
+    }
+    #deskModal .dm-solar-extras{
+      display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+    }
+    #deskModal .dm-solar-extras[hidden]{ display:none !important; }
+    #deskModal .dm-foot-actions{
+      display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;
+    }
+    .solar-union-overlay{
+      position:fixed; inset:0; z-index:60;
+      display:none; align-items:center; justify-content:center;
+    }
+    .solar-union-overlay.open{ display:flex; }
+    .solar-union-backdrop{
+      position:absolute; inset:0; background:rgba(0,0,0,0.6);
+    }
+    .solar-union-panel{
+      position:relative; z-index:1;
+      width:min(960px, calc(100vw - 24px));
+      height:min(80vh, 720px);
+      background:#0a0e17;
+      border:1px solid rgba(255,255,255,0.18);
+      border-radius:12px;
+      overflow:hidden;
+      display:flex; flex-direction:column;
+      box-shadow:0 24px 64px rgba(0,0,0,0.55);
+    }
+    .solar-union-toolbar{
+      padding:8px 10px;
+      border-bottom:1px solid rgba(255,255,255,0.12);
+      display:flex; justify-content:flex-end;
+    }
+    .solar-union-frame{
+      flex:1; border:0; width:100%; min-height:0;
     }
     .btn{
       border: 1px solid rgba(255,255,255,0.22);
@@ -265,9 +299,22 @@
         <div class="grid" id="dmBody"></div>
       </div>
       <div class="foot">
-        <button class="btn ghost" type="button" data-dm-close="1">닫기</button>
-        <button class="btn primary" type="button" id="dmEnter">입장하기</button>
+        <div id="dmSolarExtras" class="dm-solar-extras" hidden></div>
+        <div class="dm-foot-actions">
+          <button class="btn ghost" type="button" data-dm-close="1">닫기</button>
+          <button class="btn primary" type="button" id="dmEnter">입장하기</button>
+        </div>
       </div>
+    </div>
+  </div>
+
+  <div id="solarUnionOverlay" class="solar-union-overlay" aria-hidden="true">
+    <div class="solar-union-backdrop" data-close-solar-union="1"></div>
+    <div class="solar-union-panel" role="dialog" aria-modal="true" aria-label="solar_union">
+      <div class="solar-union-toolbar">
+        <button type="button" class="btn ghost" data-close-solar-union="1">닫기</button>
+      </div>
+      <iframe id="solarUnionFrame" class="solar-union-frame" title="solar_union" src="about:blank"></iframe>
     </div>
   </div>
 

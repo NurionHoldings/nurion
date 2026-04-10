@@ -1,2 +1,6 @@
 # SPA catch-all 제거됨 — mobile-lobby.html·dept/*.html 이 실제 파일로 서빙되어야 함.
 # (이전 /* /index.html 200 백업은 netlify.toml 에서 삭제함)
+
+# 구 smartcity 북마크 → 태양광 사업부
+/smartcity   /dept/solar.html   301
+/smartcity/  /dept/solar.html   301

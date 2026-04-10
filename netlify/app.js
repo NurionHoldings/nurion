@@ -10,7 +10,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 
 /** app.js 수정 후 bundle 재생성했는지 확인용(콘솔·?lobbydebug=1 패널) */
-const LOBBY_BUILD_STAMP = "20260329z9";
+const LOBBY_BUILD_STAMP = "20260410a";
 try {
   window.__LOBBY_BUILD_STAMP = LOBBY_BUILD_STAMP;
 } catch (_) {}
@@ -67,6 +67,11 @@ function getBundleScriptBaseUrl() {
 function assetUrl(relativePath) {
   return new URL(relativePath, getBundleScriptBaseUrl()).href;
 }
+
+/** SolarMap 정적 배포 버전 — `dept/solar-config.js` 의 SOLAR_MAP_PACK 과 동일하게 유지. live-preview 동기화 후 올림. */
+const SOLAR_MAP_PACK = "20260410a";
+/** solar_union iframe URL. 비우면 로비 모달에서 버튼을 표시하지 않음. */
+const SOLAR_UNION_ADDON_URL = "";
 
 /** PC·모바일 공통 진입 영상 */
 const INTRO_SHARED = assetUrl("assets/intro.mp4");
@@ -617,13 +622,30 @@ function dmClose(){
   deskModal.setAttribute('aria-hidden','true');
   document.body.style.overflow = '';
   selectedDeskData = null;
+  const dmSolarExtras = document.getElementById("dmSolarExtras");
+  if (dmSolarExtras) {
+    dmSolarExtras.innerHTML = "";
+    dmSolarExtras.hidden = true;
+  }
 }
 
 deskModal?.addEventListener('click', (e)=>{
   if (e.target.closest('[data-dm-close="1"]')) dmClose();
+  if (e.target && e.target.id === 'dmSolarUnionOpen') {
+    e.preventDefault();
+    openSolarUnionOverlay();
+  }
 });
 window.addEventListener('keydown', (e)=>{
   if (e.key === 'Escape' && deskModal?.classList.contains('open')) dmClose();
+});
+
+document.getElementById('solarUnionOverlay')?.addEventListener('click', (e) => {
+  if (e.target.closest('[data-close-solar-union="1"]')) closeSolarUnionOverlay();
+});
+window.addEventListener('keydown', (e) => {
+  const su = document.getElementById('solarUnionOverlay');
+  if (e.key === 'Escape' && su && su.classList.contains('open')) closeSolarUnionOverlay();
 });
 
 function openDept(deptKey, { updateHash = true } = {}){
@@ -686,9 +708,34 @@ function renderDeptPage(deptKey){
 
   const blocksHtml = d.blocks.map(b => `\n    <div class="block">\n      <h3>${b.title}</h3>\n      <ul>${b.items.map(x=>`<li>${x}</li>`).join('')}</ul>\n    </div>\n  `).join('');
 
-  page.innerHTML = `\n    <div class="deptTopbar">\n      <div style="display:flex; flex-direction:column; gap:4px;">\n        <div style="font-size:12px; opacity:.72; letter-spacing:.12em;">${d.kicker}</div>\n        <div style="font-size:16px;">${d.title}</div>\n      </div>\n      <button class="btn ghost" type="button" data-action="dept-back">로비로</button>\n    </div>\n\n    <div class="deptWrap">\n      <div class="deptHero">\n        <h1>${d.title}</h1>\n        <p>${d.sub}</p>\n        <div class="deptBlocks">${blocksHtml}</div>\n      </div>\n    </div>\n  `;
+  let solarExtra = "";
+  if (deptKey === "solar") {
+    const mapUrl = new URL(assetUrl("dept/solar-map/index.html"));
+    mapUrl.searchParams.set("v", SOLAR_MAP_PACK);
+    solarExtra = `\n        <div class="deptSolarNav" style="margin-top:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">\n          <a class="btn ghost" href="${mapUrl.href}" target="_blank" rel="noopener" style="display:inline-block;text-decoration:none;color:inherit;">발전소 지도 (SolarMap)</a>\n        </div>`;
+  }
+
+  page.innerHTML = `\n    <div class="deptTopbar">\n      <div style="display:flex; flex-direction:column; gap:4px;">\n        <div style="font-size:12px; opacity:.72; letter-spacing:.12em;">${d.kicker}</div>\n        <div style="font-size:16px;">${d.title}</div>\n      </div>\n      <button class="btn ghost" type="button" data-action="dept-back">로비로</button>\n    </div>\n\n    <div class="deptWrap">\n      <div class="deptHero">\n        <h1>${d.title}</h1>\n        <p>${d.sub}</p>\n        <div class="deptBlocks">${blocksHtml}</div>${solarExtra}\n      </div>\n    </div>\n  `;
 }
 Object.keys(DEPT_CONTENT).forEach(renderDeptPage);
+
+function openSolarUnionOverlay() {
+  const root = document.getElementById("solarUnionOverlay");
+  const frame = document.getElementById("solarUnionFrame");
+  if (!root || !frame || !SOLAR_UNION_ADDON_URL) return;
+  frame.src = SOLAR_UNION_ADDON_URL;
+  root.classList.add("open");
+  root.setAttribute("aria-hidden", "false");
+}
+
+function closeSolarUnionOverlay() {
+  const root = document.getElementById("solarUnionOverlay");
+  const frame = document.getElementById("solarUnionFrame");
+  if (!root) return;
+  root.classList.remove("open");
+  root.setAttribute("aria-hidden", "true");
+  if (frame) frame.src = "about:blank";
+}
 
 function openDeskModalByDept({ deptKey, label }){
   const d = DEPT_CONTENT[deptKey];
@@ -699,6 +746,23 @@ function openDeskModalByDept({ deptKey, label }){
   dmSub && (dmSub.textContent = d.sub || '');
 
   dmBody && (dmBody.innerHTML = d.blocks.map(b => `\n    <div class="card">\n      <b>${b.title}</b>\n      <div style="opacity:.86; line-height:1.55;">\n        ${b.items.slice(0,3).map(x=>`• ${x}`).join('<br>')}\n      </div>\n    </div>\n  `).join(''));
+
+  const dmSolarExtras = document.getElementById("dmSolarExtras");
+  if (dmSolarExtras) {
+    if (deptKey === "solar") {
+      const mapUrl = new URL(assetUrl("dept/solar-map/index.html"));
+      mapUrl.searchParams.set("v", SOLAR_MAP_PACK);
+      let html = `<a class="btn" href="${mapUrl.href}" target="_blank" rel="noopener">발전소 지도</a>`;
+      if (SOLAR_UNION_ADDON_URL) {
+        html += `<button type="button" class="btn primary" id="dmSolarUnionOpen">solar_union</button>`;
+      }
+      dmSolarExtras.innerHTML = html;
+      dmSolarExtras.hidden = false;
+    } else {
+      dmSolarExtras.innerHTML = "";
+      dmSolarExtras.hidden = true;
+    }
+  }
 
   dmOpen();
 }

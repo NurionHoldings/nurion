@@ -1,0 +1,81 @@
+/* SolarMap — 로비/사업부와 겹치지 않도록 .solar-map-root 아래만 스타일 */
+.solar-map-root {
+  min-height: 100vh;
+  margin: 0;
+  font-family: "Pretendard", "Noto Sans KR", system-ui, sans-serif;
+  color: #e8eeff;
+  background: linear-gradient(180deg, #070b12 0%, #0a1020 100%);
+}
+
+.solar-map-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(10, 14, 23, 0.85);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.solar-map-kicker {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  opacity: 0.72;
+}
+
+.solar-map-title {
+  margin: 4px 0 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.solar-map-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.solar-map-link {
+  color: inherit;
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 13px;
+}
+
+.solar-map-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.solar-map-main {
+  padding: 20px;
+  min-height: 40vh;
+}
+
+.solar-map-placeholder {
+  border: 1px dashed rgba(255, 255, 255, 0.22);
+  border-radius: 16px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.03);
+  line-height: 1.65;
+}
+
+.solar-map-placeholder code {
+  font-size: 12px;
+  opacity: 0.9;
+  word-break: break-all;
+}
+
+.solar-map-note {
+  padding: 0 20px 28px;
+  font-size: 12px;
+  opacity: 0.65;
+  max-width: 720px;
+}

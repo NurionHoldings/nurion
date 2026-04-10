@@ -24778,7 +24778,7 @@ function DRACOWorker() {
 }
 
 // netlify/app.js
-var LOBBY_BUILD_STAMP = "20260329z9";
+var LOBBY_BUILD_STAMP = "20260410a";
 try {
   window.__LOBBY_BUILD_STAMP = LOBBY_BUILD_STAMP;
 } catch (_) {
@@ -24820,6 +24820,8 @@ function getBundleScriptBaseUrl() {
 function assetUrl(relativePath) {
   return new URL(relativePath, getBundleScriptBaseUrl()).href;
 }
+var SOLAR_MAP_PACK = "20260410a";
+var SOLAR_UNION_ADDON_URL = "";
 var INTRO_SHARED = assetUrl("assets/intro.mp4");
 var VIDEO_AD_PATH = assetUrl("assets/intro.mp4");
 var LOBBY_25D_VIDEO = assetUrl("assets/lobby_2d5.mp4");
@@ -25288,12 +25290,28 @@ function dmClose() {
   deskModal.setAttribute("aria-hidden", "true");
   document.body.style.overflow = "";
   selectedDeskData = null;
+  const dmSolarExtras = document.getElementById("dmSolarExtras");
+  if (dmSolarExtras) {
+    dmSolarExtras.innerHTML = "";
+    dmSolarExtras.hidden = true;
+  }
 }
 deskModal?.addEventListener("click", (e) => {
   if (e.target.closest('[data-dm-close="1"]')) dmClose();
+  if (e.target && e.target.id === "dmSolarUnionOpen") {
+    e.preventDefault();
+    openSolarUnionOverlay();
+  }
 });
 window.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && deskModal?.classList.contains("open")) dmClose();
+});
+document.getElementById("solarUnionOverlay")?.addEventListener("click", (e) => {
+  if (e.target.closest('[data-close-solar-union="1"]')) closeSolarUnionOverlay();
+});
+window.addEventListener("keydown", (e) => {
+  const su = document.getElementById("solarUnionOverlay");
+  if (e.key === "Escape" && su && su.classList.contains("open")) closeSolarUnionOverlay();
 });
 function openDept(deptKey, { updateHash = true } = {}) {
   const page = deptPages.get(deptKey);
@@ -25351,6 +25369,15 @@ function renderDeptPage(deptKey) {
       <ul>${b.items.map((x) => `<li>${x}</li>`).join("")}</ul>
     </div>
   `).join("");
+  let solarExtra = "";
+  if (deptKey === "solar") {
+    const mapUrl = new URL(assetUrl("dept/solar-map/index.html"));
+    mapUrl.searchParams.set("v", SOLAR_MAP_PACK);
+    solarExtra = `
+        <div class="deptSolarNav" style="margin-top:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+          <a class="btn ghost" href="${mapUrl.href}" target="_blank" rel="noopener" style="display:inline-block;text-decoration:none;color:inherit;">\uBC1C\uC804\uC18C \uC9C0\uB3C4 (SolarMap)</a>
+        </div>`;
+  }
   page.innerHTML = `
     <div class="deptTopbar">
       <div style="display:flex; flex-direction:column; gap:4px;">
@@ -25364,16 +25391,32 @@ function renderDeptPage(deptKey) {
       <div class="deptHero">
         <h1>${d.title}</h1>
         <p>${d.sub}</p>
-        <div class="deptBlocks">${blocksHtml}</div>
+        <div class="deptBlocks">${blocksHtml}</div>${solarExtra}
       </div>
     </div>
   `;
 }
 Object.keys(DEPT_CONTENT).forEach(renderDeptPage);
+function openSolarUnionOverlay() {
+  const root = document.getElementById("solarUnionOverlay");
+  const frame = document.getElementById("solarUnionFrame");
+  if (!root || !frame || !SOLAR_UNION_ADDON_URL) return;
+  frame.src = SOLAR_UNION_ADDON_URL;
+  root.classList.add("open");
+  root.setAttribute("aria-hidden", "false");
+}
+function closeSolarUnionOverlay() {
+  const root = document.getElementById("solarUnionOverlay");
+  const frame = document.getElementById("solarUnionFrame");
+  if (!root) return;
+  root.classList.remove("open");
+  root.setAttribute("aria-hidden", "true");
+  if (frame) frame.src = "about:blank";
+}
 function openDeskModalByDept({ deptKey, label }) {
   const d = DEPT_CONTENT[deptKey];
   if (!d) return;
-  dmKicker && (dmKicker.textContent = d.kicker || "(주)누리온홀딩스");
+  dmKicker && (dmKicker.textContent = d.kicker || "(\uC8FC)\uB204\uB9AC\uC628\uD640\uB529\uC2A4");
   dmTitle && (dmTitle.textContent = d.title || label || "\uC0AC\uC5C5\uBD80");
   dmSub && (dmSub.textContent = d.sub || "");
   dmBody && (dmBody.innerHTML = d.blocks.map((b) => `
@@ -25384,6 +25427,22 @@ function openDeskModalByDept({ deptKey, label }) {
       </div>
     </div>
   `).join(""));
+  const dmSolarExtras = document.getElementById("dmSolarExtras");
+  if (dmSolarExtras) {
+    if (deptKey === "solar") {
+      const mapUrl = new URL(assetUrl("dept/solar-map/index.html"));
+      mapUrl.searchParams.set("v", SOLAR_MAP_PACK);
+      let html = `<a class="btn" href="${mapUrl.href}" target="_blank" rel="noopener">\uBC1C\uC804\uC18C \uC9C0\uB3C4</a>`;
+      if (SOLAR_UNION_ADDON_URL) {
+        html += `<button type="button" class="btn primary" id="dmSolarUnionOpen">solar_union</button>`;
+      }
+      dmSolarExtras.innerHTML = html;
+      dmSolarExtras.hidden = false;
+    } else {
+      dmSolarExtras.innerHTML = "";
+      dmSolarExtras.hidden = true;
+    }
+  }
   dmOpen();
 }
 dmEnter?.addEventListener("click", () => {
