@@ -1,4 +1,8 @@
-import { SOLAR_MAP_PACK, SOLAR_UNION_ADDON_URL } from "./solar-config.js";
+/**
+ * 태양광 페이지 상단 네비만 연결: 본문 HTML은 수정하지 않음.
+ * URL은 solar-config.js 한 곳에서만 설정.
+ */
+import { SOLAR_MAP_PACK, SOLAR_UNION_ADDON_URL, SOLAR_COOP_UNION_URL } from "./solar-config.js";
 
 const mapLink = document.getElementById("solarMapNavLink");
 if (mapLink) {
@@ -7,31 +11,19 @@ if (mapLink) {
   mapLink.href = u.href;
 }
 
-const unionBtn = document.getElementById("solarUnionOpenBtn");
-const overlay = document.getElementById("solarUnionOverlay");
-const frame = document.getElementById("solarUnionFrame");
+const unionLink = document.getElementById("solarUnionLink");
+if (unionLink) {
+  const url = String(SOLAR_UNION_ADDON_URL || "").trim();
+  if (url) {
+    unionLink.href = url;
+    unionLink.hidden = false;
+  } else {
+    unionLink.hidden = true;
+  }
+}
 
-if (SOLAR_UNION_ADDON_URL && unionBtn && overlay && frame) {
-  unionBtn.hidden = false;
-  unionBtn.addEventListener("click", () => {
-    frame.src = SOLAR_UNION_ADDON_URL;
-    overlay.classList.add("open");
-    overlay.setAttribute("aria-hidden", "false");
-  });
-  overlay.addEventListener("click", (e) => {
-    if (e.target.closest("[data-close-solar-union]")) {
-      overlay.classList.remove("open");
-      overlay.setAttribute("aria-hidden", "true");
-      frame.src = "about:blank";
-    }
-  });
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && overlay.classList.contains("open")) {
-      overlay.classList.remove("open");
-      overlay.setAttribute("aria-hidden", "true");
-      frame.src = "about:blank";
-    }
-  });
-} else if (unionBtn) {
-  unionBtn.hidden = true;
+const coopUnionLink = document.getElementById("solarCoopUnionLink");
+if (coopUnionLink) {
+  const u = String(SOLAR_COOP_UNION_URL || "").trim();
+  if (u) coopUnionLink.href = u;
 }

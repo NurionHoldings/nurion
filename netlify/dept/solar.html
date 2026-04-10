@@ -228,6 +228,14 @@
     flex-wrap:wrap;
     justify-content:flex-end;
   }
+  .ctaBar .btn--coop{
+    border: 1px solid rgba(255, 200, 120, 0.45);
+    background: rgba(255, 180, 80, 0.14);
+    color: #fff;
+  }
+  .ctaBar .btn--coop:hover{
+    background: rgba(255, 180, 80, 0.24);
+  }
   .note{
     display:flex; align-items:flex-start; gap:10px;
     border: 1px dashed rgba(255,255,255,.22);
@@ -420,33 +428,6 @@
     .split{grid-template-columns:1fr}
   .hero h1{font-size:26px}
 }
-  .solar-union-html{
-    position:fixed; inset:0; z-index:100;
-    display:none; align-items:center; justify-content:center;
-  }
-  .solar-union-html.open{ display:flex; }
-  .solar-union-html__backdrop{
-    position:absolute; inset:0; background:rgba(0,0,0,0.6);
-  }
-  .solar-union-html__panel{
-    position:relative; z-index:1;
-    width:min(960px, calc(100vw - 24px));
-    height:min(80vh, 720px);
-    background:var(--bg0);
-    border:1px solid var(--border);
-    border-radius:12px;
-    overflow:hidden;
-    display:flex; flex-direction:column;
-    box-shadow:var(--shadow);
-  }
-  .solar-union-html__bar{
-    padding:8px 10px;
-    border-bottom:1px solid var(--border);
-    display:flex; justify-content:flex-end;
-  }
-  .solar-union-html__panel iframe{
-    flex:1; border:0; width:100%; min-height:0;
-  }
   </style>
   <link rel="stylesheet" href="dept-shared.css" />
 </head>
@@ -460,7 +441,7 @@
       <div class="actions">
         <a class="btn" href="../index.html?lobby=1">로비로</a>
         <a class="btn" href="solar-map/index.html" id="solarMapNavLink">발전소 지도</a>
-        <button type="button" class="btn primary" id="solarUnionOpenBtn" hidden>solar_union</button>
+        <a class="btn primary" id="solarUnionLink" href="#" hidden target="_blank" rel="noopener noreferrer">solar_union</a>
         <a class="btn" href="resources.html">자료실</a>
         <a class="btn primary" href="#contact">사업 문의</a>
       </div>
@@ -486,6 +467,7 @@
           <div class="ctaBar">
             <a class="btn primary" href="#contact">사업 문의</a>
             <a class="btn" href="#service">서비스 보기</a>
+            <a class="btn btn--coop" id="solarCoopUnionLink" href="https://solar-union.netlify.app/" target="_blank" rel="noopener noreferrer">태양광협동조합 설립하기</a>
           </div>
         </div>
       </section>
@@ -854,16 +836,6 @@
         </div>
       </div>
     </section>
-
-    <div id="solarUnionOverlay" class="solar-union-html" aria-hidden="true">
-      <div class="solar-union-html__backdrop" data-close-solar-union></div>
-      <div class="solar-union-html__panel" role="dialog" aria-modal="true" aria-label="solar_union">
-        <div class="solar-union-html__bar">
-          <button type="button" class="btn" data-close-solar-union>닫기</button>
-        </div>
-        <iframe id="solarUnionFrame" title="solar_union" src="about:blank"></iframe>
-      </div>
-    </div>
 
     <footer class="footer" style="align-items:flex-start; flex-direction:column;">
       <span class="pill"><span class="dot"></span><span class="small">태양광사업 · NURION</span></span>
