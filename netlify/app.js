@@ -231,7 +231,7 @@ const DEPT_CONTENT = {
   news: {
     kicker: 'MEDIA',
     title: '인터넷신문사',
-    sub: '브랜드 메시지를 “기사/콘텐츠”로 전환해 신뢰를 쌓는 미디어 운영',
+    sub: '노가다뉴스(www.nogadanews.com) · DCF News(www.dcfnews.com) — 기사·보도·광고·제휴',
     blocks: [
       { title: '1) 기획/편집', items: ['섹션/카테고리 설계', '주간 편집회의 템플릿', '팩트체크·가이드', '특집/연재 기획'] },
       { title: '2) 취재/제작', items: ['현장 취재 동선', '인터뷰 질문지', '사진/영상 컷 구성', '원고 작성/교열'] },
