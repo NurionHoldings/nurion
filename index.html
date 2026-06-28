@@ -106,6 +106,35 @@
       0%, 100% { opacity: 0.88; filter: brightness(1); }
       50% { opacity: 1; filter: brightness(1.1); }
     }
+    #lobby-usage-hint.lobby-usage-hint{
+      position: fixed;
+      z-index: 58;
+      left: 0;
+      top: 0;
+      max-width: min(92vw, 540px);
+      padding: 14px 22px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.55;
+      letter-spacing: 0.03em;
+      color: rgba(200, 252, 255, 0.96);
+      pointer-events: none;
+      opacity: 0;
+      transform: translate(-50%, calc(-100% - 14px));
+      transition: opacity 0.45s ease;
+      text-shadow:
+        0 0 8px rgba(0, 255, 255, 0.88),
+        0 0 20px rgba(0, 180, 255, 0.48);
+      background: linear-gradient(175deg, rgba(0, 45, 70, 0.62) 0%, rgba(0, 18, 38, 0.48) 100%);
+      border: 1px solid rgba(0, 230, 255, 0.42);
+      box-shadow: inset 0 0 22px rgba(0, 255, 255, 0.1), 0 0 28px rgba(0, 140, 255, 0.22);
+      backdrop-filter: blur(10px);
+      animation: desk-tooltip-holo-pulse 2.6s ease-in-out infinite;
+    }
+    #lobby-usage-hint.lobby-usage-hint.lobby-usage-hint--visible{
+      opacity: 1;
+    }
     /* ===== Desk Modal + Dept Panels ===== */
     #deskModal{
       position: fixed; inset: 0; z-index: 50;
@@ -264,6 +293,8 @@
   </div>
 
   <div id="desk-tooltip" class="desk-tooltip--hologram" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <div id="lobby-usage-hint" class="lobby-usage-hint" hidden aria-hidden="true" role="status" aria-live="polite"></div>
 
   <!-- ===== Desk Info Modal (Planet modal 역할) ===== -->
   <div id="deskModal" aria-hidden="true">

@@ -24778,7 +24778,7 @@ function DRACOWorker() {
 }
 
 // netlify/app.js
-var LOBBY_BUILD_STAMP = "20260411a";
+var LOBBY_BUILD_STAMP = "20260330c";
 try {
   window.__LOBBY_BUILD_STAMP = LOBBY_BUILD_STAMP;
 } catch (_) {
@@ -26518,6 +26518,8 @@ function initThree() {
   renderer.domElement.addEventListener(
     "pointermove",
     (e) => {
+      maybeShowLobbyUsageHintFromPointer(e);
+      updateLobbyUsageHintPosition(e.clientX, e.clientY);
       deskHoverLastX = e.clientX;
       deskHoverLastY = e.clientY;
       if (deskHoverRaf) return;
@@ -26531,6 +26533,11 @@ function initThree() {
   renderer.domElement.addEventListener(
     "pointerleave",
     () => {
+      hideLobbyUsageHint();
+      if (!lobbyUsageHintConsumed) {
+        lobbyUsageHintPrevClient = null;
+        lobbyUsageHintPixelAccum = 0;
+      }
       const tel = document.getElementById("desk-tooltip");
       if (tel) tel.style.display = "none";
       setDeptHoverCursor(false);
@@ -27055,6 +27062,76 @@ function resolveHoveredDeptLabelFromHits(hits) {
 var deskHoverRaf = 0;
 var deskHoverLastX = 0;
 var deskHoverLastY = 0;
+var LOBBY_USAGE_HINT_TEXT = "\uD589\uC131\uC744 \uD074\uB9AD\uD558\uBA74 \uB204\uB9AC\uC628\uD640\uB529\uC2A4\uC5D0\uC11C \uD558\uB294 \uC77C\uC744 \uC790\uC138\uD788 \uBCF4\uC2E4 \uC218 \uC788\uC2B5\uB2C8\uB2E4";
+var LOBBY_USAGE_HINT_MOVE_THRESHOLD = 8;
+var LOBBY_USAGE_HINT_AUTO_HIDE_MS = 3e3;
+var lobbyUsageHintConsumed = false;
+var lobbyUsageHintPixelAccum = 0;
+var lobbyUsageHintPrevClient = null;
+var lobbyUsageHintHideTimer = 0;
+function clearLobbyUsageHintHideTimer() {
+  if (lobbyUsageHintHideTimer) {
+    clearTimeout(lobbyUsageHintHideTimer);
+    lobbyUsageHintHideTimer = 0;
+  }
+}
+function hideLobbyUsageHint() {
+  clearLobbyUsageHintHideTimer();
+  const hint = document.getElementById("lobby-usage-hint");
+  if (!hint || hint.hidden) return;
+  hint.classList.remove("lobby-usage-hint--visible");
+  hint.setAttribute("aria-hidden", "true");
+  window.setTimeout(() => {
+    try {
+      if (hint && !hint.classList.contains("lobby-usage-hint--visible")) hint.hidden = true;
+    } catch (_) {
+    }
+  }, 520);
+}
+function updateLobbyUsageHintPosition(clientX, clientY) {
+  const hint = document.getElementById("lobby-usage-hint");
+  if (!hint || hint.hidden) return;
+  const pad = 10;
+  const x = Math.min(Math.max(clientX, pad), window.innerWidth - pad);
+  const y = Math.min(Math.max(clientY, pad), window.innerHeight - pad);
+  hint.style.left = `${x}px`;
+  hint.style.top = `${y}px`;
+}
+function maybeShowLobbyUsageHintFromPointer(e) {
+  if (lobbyUsageHintConsumed) return;
+  if (useMobileLobbyPath()) return;
+  const introEl = document.getElementById("intro-container");
+  if (introEl && !introEl.classList.contains("hidden")) return;
+  try {
+    if (deptRoot && deptRoot.classList.contains("open")) return;
+    if (deskModal && deskModal.classList.contains("open")) return;
+  } catch (_) {
+  }
+  let dx = Math.abs(e.movementX || 0);
+  let dy = Math.abs(e.movementY || 0);
+  if (dx + dy < 0.25 && lobbyUsageHintPrevClient) {
+    dx = Math.abs(e.clientX - lobbyUsageHintPrevClient.x);
+    dy = Math.abs(e.clientY - lobbyUsageHintPrevClient.y);
+  }
+  lobbyUsageHintPrevClient = { x: e.clientX, y: e.clientY };
+  lobbyUsageHintPixelAccum += dx + dy;
+  if (lobbyUsageHintPixelAccum < LOBBY_USAGE_HINT_MOVE_THRESHOLD) return;
+  const hint = document.getElementById("lobby-usage-hint");
+  if (!hint) return;
+  lobbyUsageHintConsumed = true;
+  clearLobbyUsageHintHideTimer();
+  hint.textContent = LOBBY_USAGE_HINT_TEXT;
+  hint.hidden = false;
+  hint.setAttribute("aria-hidden", "false");
+  updateLobbyUsageHintPosition(e.clientX, e.clientY);
+  requestAnimationFrame(() => {
+    hint.classList.add("lobby-usage-hint--visible");
+    updateLobbyUsageHintPosition(e.clientX, e.clientY);
+  });
+  lobbyUsageHintHideTimer = window.setTimeout(() => {
+    hideLobbyUsageHint();
+  }, LOBBY_USAGE_HINT_AUTO_HIDE_MS);
+}
 function updateDeskDeptHoverTooltip(clientX, clientY) {
   const el = document.getElementById("desk-tooltip");
   const introEl = document.getElementById("intro-container");

@@ -1,0 +1,6 @@
+# 실제 배포 도메인(또는 Netlify 할당 도메인)과 일치하는 절대 URL로 바꿀 수 있습니다.
+
+User-agent: *
+Allow: /
+
+Sitemap: https://www.nurionholdings.com/sitemap.xml

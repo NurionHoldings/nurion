@@ -10,7 +10,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 
 /** app.js 수정 후 bundle 재생성했는지 확인용(콘솔·?lobbydebug=1 패널) */
-const LOBBY_BUILD_STAMP = "20260411a";
+const LOBBY_BUILD_STAMP = "20260330c";
 try {
   window.__LOBBY_BUILD_STAMP = LOBBY_BUILD_STAMP;
 } catch (_) {}
@@ -2239,6 +2239,8 @@ function initThree() {
   renderer.domElement.addEventListener(
     "pointermove",
     (e) => {
+      maybeShowLobbyUsageHintFromPointer(e);
+      updateLobbyUsageHintPosition(e.clientX, e.clientY);
       deskHoverLastX = e.clientX;
       deskHoverLastY = e.clientY;
       if (deskHoverRaf) return;
@@ -2252,6 +2254,11 @@ function initThree() {
   renderer.domElement.addEventListener(
     "pointerleave",
     () => {
+      hideLobbyUsageHint();
+      if (!lobbyUsageHintConsumed) {
+        lobbyUsageHintPrevClient = null;
+        lobbyUsageHintPixelAccum = 0;
+      }
       const tel = document.getElementById("desk-tooltip");
       if (tel) tel.style.display = "none";
       setDeptHoverCursor(false);
@@ -2828,6 +2835,87 @@ function resolveHoveredDeptLabelFromHits(hits) {
 let deskHoverRaf = 0;
 let deskHoverLastX = 0;
 let deskHoverLastY = 0;
+
+const LOBBY_USAGE_HINT_TEXT =
+  "행성을 클릭하면 누리온홀딩스에서 하는 일을 자세히 보실 수 있습니다";
+/** 인트로 후 캔버스 위에서 포인터 이동 누적(px) — 이 값 넘기면 안내 1회 표시 */
+const LOBBY_USAGE_HINT_MOVE_THRESHOLD = 8;
+/** 안내 표시 후 자동 숨김(ms). 캔버스 밖으로 나가면 그 전이라도 즉시 숨김 */
+const LOBBY_USAGE_HINT_AUTO_HIDE_MS = 3000;
+
+let lobbyUsageHintConsumed = false;
+let lobbyUsageHintPixelAccum = 0;
+let lobbyUsageHintPrevClient = null;
+let lobbyUsageHintHideTimer = 0;
+
+function clearLobbyUsageHintHideTimer() {
+  if (lobbyUsageHintHideTimer) {
+    clearTimeout(lobbyUsageHintHideTimer);
+    lobbyUsageHintHideTimer = 0;
+  }
+}
+
+function hideLobbyUsageHint() {
+  clearLobbyUsageHintHideTimer();
+  const hint = document.getElementById("lobby-usage-hint");
+  if (!hint || hint.hidden) return;
+  hint.classList.remove("lobby-usage-hint--visible");
+  hint.setAttribute("aria-hidden", "true");
+  window.setTimeout(() => {
+    try {
+      if (hint && !hint.classList.contains("lobby-usage-hint--visible")) hint.hidden = true;
+    } catch (_) {}
+  }, 520);
+}
+
+/** 안내 박스 앵커: #desk-tooltip 과 동일하게 커서 꼭지점 기준 위쪽 */
+function updateLobbyUsageHintPosition(clientX, clientY) {
+  const hint = document.getElementById("lobby-usage-hint");
+  if (!hint || hint.hidden) return;
+  const pad = 10;
+  const x = Math.min(Math.max(clientX, pad), window.innerWidth - pad);
+  const y = Math.min(Math.max(clientY, pad), window.innerHeight - pad);
+  hint.style.left = `${x}px`;
+  hint.style.top = `${y}px`;
+}
+
+function maybeShowLobbyUsageHintFromPointer(e) {
+  if (lobbyUsageHintConsumed) return;
+  if (useMobileLobbyPath()) return;
+  const introEl = document.getElementById("intro-container");
+  if (introEl && !introEl.classList.contains("hidden")) return;
+  try {
+    if (deptRoot && deptRoot.classList.contains("open")) return;
+    if (deskModal && deskModal.classList.contains("open")) return;
+  } catch (_) {}
+
+  let dx = Math.abs(e.movementX || 0);
+  let dy = Math.abs(e.movementY || 0);
+  if (dx + dy < 0.25 && lobbyUsageHintPrevClient) {
+    dx = Math.abs(e.clientX - lobbyUsageHintPrevClient.x);
+    dy = Math.abs(e.clientY - lobbyUsageHintPrevClient.y);
+  }
+  lobbyUsageHintPrevClient = { x: e.clientX, y: e.clientY };
+  lobbyUsageHintPixelAccum += dx + dy;
+  if (lobbyUsageHintPixelAccum < LOBBY_USAGE_HINT_MOVE_THRESHOLD) return;
+
+  const hint = document.getElementById("lobby-usage-hint");
+  if (!hint) return;
+  lobbyUsageHintConsumed = true;
+  clearLobbyUsageHintHideTimer();
+  hint.textContent = LOBBY_USAGE_HINT_TEXT;
+  hint.hidden = false;
+  hint.setAttribute("aria-hidden", "false");
+  updateLobbyUsageHintPosition(e.clientX, e.clientY);
+  requestAnimationFrame(() => {
+    hint.classList.add("lobby-usage-hint--visible");
+    updateLobbyUsageHintPosition(e.clientX, e.clientY);
+  });
+
+  lobbyUsageHintHideTimer = window.setTimeout(() => {
+    hideLobbyUsageHint();
+  }, LOBBY_USAGE_HINT_AUTO_HIDE_MS);
+}
 
 function updateDeskDeptHoverTooltip(clientX, clientY) {
   const el = document.getElementById("desk-tooltip");
